@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  
+  <title>linux中非root权限用户python配置详解 | Hexo</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <meta name="description" content="在使用Linux的过程中，经常需要用到系统默认版本之外的python版本，甚至是需要自行安装符合需求的版本。对于没有root权限的用户来说，配置起来似乎非常困难，实际上这一切确实是不需要root权限就可以完成的。 值得补充的是，本文介绍的方法不局限于python，对于用户自己安装的软件、包等也是一样的步骤，掌握了原理，方法便可以一通百通。 .local作用这部分主要介绍.local文件夹，若对此不">
+<meta property="og:type" content="article">
+<meta property="og:title" content="linux中非root权限用户python配置详解">
+<meta property="og:url" content="http://example.com/2022/10/23/linux-user-python-config/index.html">
+<meta property="og:site_name" content="Hexo">
+<meta property="og:description" content="在使用Linux的过程中，经常需要用到系统默认版本之外的python版本，甚至是需要自行安装符合需求的版本。对于没有root权限的用户来说，配置起来似乎非常困难，实际上这一切确实是不需要root权限就可以完成的。 值得补充的是，本文介绍的方法不局限于python，对于用户自己安装的软件、包等也是一样的步骤，掌握了原理，方法便可以一通百通。 .local作用这部分主要介绍.local文件夹，若对此不">
+<meta property="og:locale" content="en_US">
+<meta property="article:published_time" content="2022-10-23T08:24:55.000Z">
+<meta property="article:modified_time" content="2024-03-31T09:00:59.008Z">
+<meta property="article:author" content="John Doe">
+<meta property="article:tag" content="python">
+<meta name="twitter:card" content="summary">
+  
+    <link rel="alternate" href="/atom.xml" title="Hexo" type="application/atom+xml">
+  
+  
+    <link rel="shortcut icon" href="/favicon.png">
+  
+  
+  
+<link rel="stylesheet" href="/css/style.css">
+
+  
+    
+<link rel="stylesheet" href="/fancybox/jquery.fancybox.min.css">
+
+  
+  
+<meta name="generator" content="Hexo 7.1.1"></head>
+
+<body>
+  <div id="container">
+    <div id="wrap">
+      <header id="header">
+  <div id="banner"></div>
+  <div id="header-outer" class="outer">
+    <div id="header-title" class="inner">
+      <h1 id="logo-wrap">
+        <a href="/" id="logo">Hexo</a>
+      </h1>
+      
+    </div>
+    <div id="header-inner" class="inner">
+      <nav id="main-nav">
+        <a id="main-nav-toggle" class="nav-icon"><span class="fa fa-bars"></span></a>
+        
+          <a class="main-nav-link" href="/">Home</a>
+        
+          <a class="main-nav-link" href="/archives">Archives</a>
+        
+      </nav>
+      <nav id="sub-nav">
+        
+        
+          <a class="nav-icon" href="/atom.xml" title="RSS Feed"><span class="fa fa-rss"></span></a>
+        
+        <a class="nav-icon nav-search-btn" title="Search"><span class="fa fa-search"></span></a>
+      </nav>
+      <div id="search-form-wrap">
+        <form action="//google.com/search" method="get" accept-charset="UTF-8" class="search-form"><input type="search" name="q" class="search-form-input" placeholder="Search"><button type="submit" class="search-form-submit">&#xF002;</button><input type="hidden" name="sitesearch" value="http://example.com"></form>
+      </div>
+    </div>
+  </div>
+</header>
+
+      <div class="outer">
+        <section id="main"><article id="post-linux-user-python-config" class="h-entry article article-type-post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
+  <div class="article-meta">
+    <a href="/2022/10/23/linux-user-python-config/" class="article-date">
+  <time class="dt-published" datetime="2022-10-23T08:24:55.000Z" itemprop="datePublished">2022-10-23</time>
+</a>
+    
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/%E7%BC%96%E7%A8%8B%E8%AF%AD%E8%A8%80/">编程语言</a>
+  </div>
+
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="p-name article-title" itemprop="headline name">
+      linux中非root权限用户python配置详解
+    </h1>
+  
+
+      </header>
+    
+    <div class="e-content article-entry" itemprop="articleBody">
+      
+        <p>在使用Linux的过程中，经常需要用到系统默认版本之外的python版本，甚至是需要自行安装符合需求的版本。对于没有root权限的用户来说，配置起来似乎非常困难，实际上这一切确实是不需要root权限就可以完成的。</p>
+<p>值得补充的是，本文介绍的方法不局限于python，对于用户自己安装的软件、包等也是一样的步骤，掌握了原理，方法便可以一通百通。</p>
+<h2 id="local作用"><a href="#local作用" class="headerlink" title=".local作用"></a>.local作用</h2><p>这部分主要介绍<code>.local</code>文件夹，若对此不感兴趣可以跳过，不会影响后续环境配置。</p>
+<p>提到为单个用户配置特定单用的数据就不能不说<code>.local</code>文件夹，这是一个路径固定为<code>/home/[username]/.local</code>的文件夹，用于存储专用于用户（user-specific）的程序数据，比如安装的用户程序、python模块等。同时由于<code>.local</code>处于用户的根目录下，对其操作不需要root权限。</p>
+<p>所以，在单个用户配置python、pip等环境时，理论上都应该和<code>.local</code>文件夹打交道（实际上，不使用<code>.local</code>也是可以的，但是从规范的角度看，<code>.local</code>无疑是最推荐的）。</p>
+<h2 id="链接到自己所需的版本"><a href="#链接到自己所需的版本" class="headerlink" title="链接到自己所需的版本"></a>链接到自己所需的版本</h2><p>这里介绍最常遇到的情况，即系统中存在多个版本的python，而默认的python又不是自己想要的。举例来讲，比如系统中同时安装有python2.7和python3.8，默认python是2.7，想要将python3.8作为默认python就需要我们自己做链接了。</p>
+<p>先说一下原理：先创建一个软链接<code>.local/bin/python</code>指向python3.8，然后将<code>.local/bin</code>添加到环境变量<code>PATH</code>最前边。</p>
+<p>这样系统将优先从<code>.local/bin</code>中找python，从而可以顺理成章得根据软链接找到python3.8了。</p>
+<p><strong>step1：</strong>找到python3.8及其pip的安装路径。</p>
+<p>注意配置的时候建议一并配置pip，否则可能会出现python和pip版本不一致的情况。</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">which python3.8</span><br><span class="line">which pip3.8</span><br></pre></td></tr></table></figure>
+
+<p>一般来讲，系统中python的安装路径都在<code>/usr/bin</code>下，这里就以<code>/usr/bin/python3.8</code>和<code>/usr/bin/pip3.8</code>为例继续。</p>
+<p><strong>step2：</strong>创建软链接：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 将原本的链接删除，若原本没有可跳过</span></span><br><span class="line"><span class="built_in">rm</span> ~/.local/bin/python ~/.local/bin/pip</span><br><span class="line"><span class="comment"># 创建软链接，指向自己想要的版本</span></span><br><span class="line"><span class="built_in">ln</span> -s /usr/bin/python3.8 ~/.local/bin/python</span><br><span class="line"><span class="built_in">ln</span> -s /usr/bin/pip3.8 ~/.local/bin/pip</span><br></pre></td></tr></table></figure>
+
+<p><strong>step3：</strong>将<code>.local/bin</code>添加到环境变量<code>PATH</code>中（_若已添加，可跳过_）：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 打开~/.bashrc文件，进入编辑模式</span></span><br><span class="line">vim ~/.bashrc</span><br><span class="line"><span class="comment"># 添加环境变量</span></span><br><span class="line"><span class="built_in">export</span> PATH=~/.local/bin/:<span class="variable">$PATH</span></span><br><span class="line"><span class="comment"># 退出后 source一下使其生效</span></span><br><span class="line"><span class="built_in">source</span> ~/.bashrc</span><br></pre></td></tr></table></figure>
+
+<p>这样，新的python就配置好了，可以在命令行输入一下<code>python</code>试试~</p>
+<h2 id="安装自己所需的版本"><a href="#安装自己所需的版本" class="headerlink" title="安装自己所需的版本"></a>安装自己所需的版本</h2><p>这里介绍相对不常遇到的情况，即系统中没有安装自己想要的python。比如系统中安装了python2.7和python3.8，而自己需要python3.6，那就需要用户自己安装一个了。</p>
+<p>同样也是先说原理：在用户目录下安装python，之后和上一节一样将其链接到<code>.local/bin/python</code>中即可。</p>
+<p><strong>step1</strong>：下载和准备工作。</p>
+<p>从<a target="_blank" rel="noopener" href="https://www.python.org/ftp/python/">python官网</a>下载自己需要的python版本，这里即以安装python3.6.9为例，其他版本也是一样的操作。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 下载</span></span><br><span class="line">wget https://www.python.org/ftp/python/3.6.9/Python-3.6.9.tgz</span><br><span class="line"><span class="comment"># 解压</span></span><br><span class="line">tar zxfv Python-3.6.9.tgz</span><br><span class="line"><span class="comment"># 添加权限，否则无法执行安装</span></span><br><span class="line">find Python-3.6.9/Python -<span class="built_in">type</span> d  xargs <span class="built_in">chmod</span> 0755</span><br><span class="line"><span class="comment"># 进入解压后的目录</span></span><br><span class="line"><span class="built_in">cd</span> Python-3.6.9</span><br></pre></td></tr></table></figure>
+
+<p><strong>step2：</strong>执行安装。</p>
+<p>注意这里<code>--prefix</code>后的路径就是python的安装路径，此路径必须是绝对路径，默认我们将其安装在<code>.local</code>。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">./configure --prefix=/home/[username]/.local</span><br><span class="line">make</span><br><span class="line">make install</span><br><span class="line"><span class="comment"># 退出路径</span></span><br><span class="line"><span class="built_in">cd</span></span><br></pre></td></tr></table></figure>
+
+<p>至此，python3.6就安装完成了，后边的步骤其实和上一节的步骤是一样的。</p>
+<p><strong>step3：</strong>设置python和pip软链接。</p>
+<p>若<code>.local/bin</code>中原本没有<code>python</code>和<code>pip</code>，这一步可跳过，因为在安装的时候这些软链接就已经自动配置好了。否则就需要手动设置，步骤和上一节step2是相同的。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">cd</span> .<span class="built_in">local</span>/bin</span><br><span class="line"><span class="comment"># 可以先ls 看一下有没有名为python和pip的文件，没有的话可以跳过step3</span></span><br><span class="line"><span class="built_in">rm</span> python pip</span><br><span class="line"><span class="comment"># 设置软链接，注意安装的python3.6其实也在这一级目录里</span></span><br><span class="line"><span class="built_in">ln</span> -s python3.6 python</span><br><span class="line"><span class="built_in">ln</span> -s pip3.6 pip</span><br></pre></td></tr></table></figure>
+
+<p><strong>step4：</strong>将<code>.local/bin</code>添加到环境变量<code>PATH</code>中，和上一节step3是一样的。</p>
+<p>同样若<code>.local/bin</code>已被添加到环境变量中的话可跳过。</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">vim ~/.bashrc</span><br><span class="line">export PATH=~/.local/bin/:$PATH</span><br><span class="line">source ~/.bashrc</span><br></pre></td></tr></table></figure>
+
+<p>这样，就可以开心地使用自己安装的版本了。</p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://example.com/2022/10/23/linux-user-python-config/" data-id="clufcjlqf000a7o15630o31mi" data-title="linux中非root权限用户python配置详解" class="article-share-link"><span class="fa fa-share">Share</span></a>
+      
+      
+      
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/python/" rel="tag">python</a></li></ul>
+
+    </footer>
+  </div>
+  
+    
+<nav id="article-nav">
+  
+    <a href="/2022/10/30/norm-layers/" id="article-nav-newer" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Newer</strong>
+      <div class="article-nav-title">
+        
+          归一化层及在模型中的使用
+        
+      </div>
+    </a>
+  
+  
+    <a href="/2022/10/16/resnet-residual-block/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Older</strong>
+      <div class="article-nav-title">ResNet残差块详解</div>
+    </a>
+  
+</nav>
+
+  
+</article>
+
+
+</section>
+        
+          <aside id="sidebar">
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Categories</h3>
+    <div class="widget">
+      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/%E6%A8%A1%E5%9E%8B%E7%BB%93%E6%9E%84%E8%AE%BE%E8%AE%A1/">模型结构设计</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E6%B7%B1%E5%BA%A6%E5%AD%A6%E4%B9%A0/">深度学习</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E6%B7%B1%E5%BA%A6%E5%AD%A6%E4%B9%A0%E6%A8%A1%E5%9E%8B%E9%83%A8%E7%BD%B2/">深度学习模型部署</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E7%BC%96%E7%A8%8B%E8%AF%AD%E8%A8%80/">编程语言</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tags</h3>
+    <div class="widget">
+      <ul class="tag-list" itemprop="keywords"><li class="tag-list-item"><a class="tag-list-link" href="/tags/pyTorch/" rel="tag">pyTorch</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/python/" rel="tag">python</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E6%95%B0%E6%8D%AE%E9%9B%86/" rel="tag">数据集</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E8%AE%BA%E6%96%87/" rel="tag">论文</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tag Cloud</h3>
+    <div class="widget tagcloud">
+      <a href="/tags/pyTorch/" style="font-size: 10px;">pyTorch</a> <a href="/tags/python/" style="font-size: 20px;">python</a> <a href="/tags/%E6%95%B0%E6%8D%AE%E9%9B%86/" style="font-size: 15px;">数据集</a> <a href="/tags/%E8%AE%BA%E6%96%87/" style="font-size: 10px;">论文</a>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Archives</h3>
+    <div class="widget">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2024/03/">March 2024</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/03/">March 2023</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/02/">February 2023</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/12/">December 2022</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/10/">October 2022</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/08/">August 2022</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/07/">July 2022</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Recent Posts</h3>
+    <div class="widget">
+      <ul>
+        
+          <li>
+            <a href="/2024/03/30/Config-GitHub-Pages-with-Hexo/">使用Hexo搭建GitHub博客</a>
+          </li>
+        
+          <li>
+            <a href="/2024/03/30/hello-world/">Hello World</a>
+          </li>
+        
+          <li>
+            <a href="/2023/03/05/pytorch-model-to-onnx/">pyTorch模型转onnx</a>
+          </li>
+        
+          <li>
+            <a href="/2023/03/04/pytorch-model-to-torchscript/">pyTorch模型转torchscript</a>
+          </li>
+        
+          <li>
+            <a href="/2023/02/19/python-file-lock/">python实现文件锁</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+
+  
+</aside>
+        
+      </div>
+      <footer id="footer">
+  
+  <div class="outer">
+    <div id="footer-info" class="inner">
+      
+      &copy; 2024 John Doe<br>
+      Powered by <a href="https://hexo.io/" target="_blank">Hexo</a>
+    </div>
+  </div>
+</footer>
+
+    </div>
+    <nav id="mobile-nav">
+  
+    <a href="/" class="mobile-nav-link">Home</a>
+  
+    <a href="/archives" class="mobile-nav-link">Archives</a>
+  
+</nav>
+    
+
+
+<script src="/js/jquery-3.6.4.min.js"></script>
+
+
+
+  
+<script src="/fancybox/jquery.fancybox.min.js"></script>
+
+
+
+
+<script src="/js/script.js"></script>
+
+
+
+
+
+  </div>
+</body>
+</html>

@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  
+  <title>归一化层及在模型中的使用 | Hexo</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <meta name="description" content="在卷积神经网络CNN中，如BN、GN等归一化层得到了普遍使用。这些层之间有什么区别、分别在什么情况下使用我一直是模棱两可，现在特意整理记录一下，搞清楚这些层的原理和区别对设计模型网络也大有裨益。 此外，本文将特意花一些篇幅探讨对各种归一化方法来说，其前边的卷积层是否需要bias，这部分内容在本文第二部分。 归一化层区分归一化用于解决深度学习中的内部协变量移位（internal covariate">
+<meta property="og:type" content="article">
+<meta property="og:title" content="归一化层及在模型中的使用">
+<meta property="og:url" content="http://example.com/2022/10/30/norm-layers/index.html">
+<meta property="og:site_name" content="Hexo">
+<meta property="og:description" content="在卷积神经网络CNN中，如BN、GN等归一化层得到了普遍使用。这些层之间有什么区别、分别在什么情况下使用我一直是模棱两可，现在特意整理记录一下，搞清楚这些层的原理和区别对设计模型网络也大有裨益。 此外，本文将特意花一些篇幅探讨对各种归一化方法来说，其前边的卷积层是否需要bias，这部分内容在本文第二部分。 归一化层区分归一化用于解决深度学习中的内部协变量移位（internal covariate">
+<meta property="og:locale" content="en_US">
+<meta property="og:image" content="http://example.com/..%5Cassets%5C2022%5C10/x2.png">
+<meta property="article:published_time" content="2022-10-30T10:12:32.000Z">
+<meta property="article:modified_time" content="2024-03-31T09:53:25.886Z">
+<meta property="article:author" content="John Doe">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://example.com/..%5Cassets%5C2022%5C10/x2.png">
+  
+    <link rel="alternate" href="/atom.xml" title="Hexo" type="application/atom+xml">
+  
+  
+    <link rel="shortcut icon" href="/favicon.png">
+  
+  
+  
+<link rel="stylesheet" href="/css/style.css">
+
+  
+    
+<link rel="stylesheet" href="/fancybox/jquery.fancybox.min.css">
+
+  
+  
+<meta name="generator" content="Hexo 7.1.1"></head>
+
+<body>
+  <div id="container">
+    <div id="wrap">
+      <header id="header">
+  <div id="banner"></div>
+  <div id="header-outer" class="outer">
+    <div id="header-title" class="inner">
+      <h1 id="logo-wrap">
+        <a href="/" id="logo">Hexo</a>
+      </h1>
+      
+    </div>
+    <div id="header-inner" class="inner">
+      <nav id="main-nav">
+        <a id="main-nav-toggle" class="nav-icon"><span class="fa fa-bars"></span></a>
+        
+          <a class="main-nav-link" href="/">Home</a>
+        
+          <a class="main-nav-link" href="/archives">Archives</a>
+        
+      </nav>
+      <nav id="sub-nav">
+        
+        
+          <a class="nav-icon" href="/atom.xml" title="RSS Feed"><span class="fa fa-rss"></span></a>
+        
+        <a class="nav-icon nav-search-btn" title="Search"><span class="fa fa-search"></span></a>
+      </nav>
+      <div id="search-form-wrap">
+        <form action="//google.com/search" method="get" accept-charset="UTF-8" class="search-form"><input type="search" name="q" class="search-form-input" placeholder="Search"><button type="submit" class="search-form-submit">&#xF002;</button><input type="hidden" name="sitesearch" value="http://example.com"></form>
+      </div>
+    </div>
+  </div>
+</header>
+
+      <div class="outer">
+        <section id="main"><article id="post-norm-layers" class="h-entry article article-type-post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
+  <div class="article-meta">
+    <a href="/2022/10/30/norm-layers/" class="article-date">
+  <time class="dt-published" datetime="2022-10-30T10:12:32.000Z" itemprop="datePublished">2022-10-30</time>
+</a>
+    
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/%E6%A8%A1%E5%9E%8B%E7%BB%93%E6%9E%84%E8%AE%BE%E8%AE%A1/">模型结构设计</a>
+  </div>
+
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="p-name article-title" itemprop="headline name">
+      归一化层及在模型中的使用
+    </h1>
+  
+
+      </header>
+    
+    <div class="e-content article-entry" itemprop="articleBody">
+      
+        <p>在卷积神经网络CNN中，如BN、GN等归一化层得到了普遍使用。这些层之间有什么区别、分别在什么情况下使用我一直是模棱两可，现在特意整理记录一下，搞清楚这些层的原理和区别对设计模型网络也大有裨益。</p>
+<p>此外，本文将特意花一些篇幅探讨对各种归一化方法来说，其前边的<strong>卷积层是否需要bias</strong>，这部分内容在本文<a href="##%E4%BB%8E%E5%8D%B7%E7%A7%AF%E8%AF%B4%E8%B5%B7%E2%80%94%E2%80%94%E6%98%AF%E5%90%A6%E9%9C%80%E8%A6%81bias%EF%BC%9F">第二部分</a>。</p>
+<h2 id="归一化层区分"><a href="#归一化层区分" class="headerlink" title="归一化层区分"></a>归一化层区分</h2><p>归一化用于解决深度学习中的内部协变量移位（internal covariate shift）现象，可以用于缓解梯度爆炸、提高模型收敛速度，同时能起到正则化的作用，防止过拟合。</p>
+<p>目前的主流归一化层有Batch Norm(BN)、Layer Norm(LN)、Instance Norm(IN)、Group Norm(GN)。其区别可以参考下图，这张图来自于论文<a target="_blank" rel="noopener" href="https://arxiv.org/pdf/1803.08494.pdf">Group Normalization</a>[1]。</p>
+<p><img src="/..%5Cassets%5C2022%5C10/x2.png" alt="norms"></p>
+<p>归纳起来说，无论是哪一种归一化，本质上都是将特征图分为若干个部分，分别对每个部分做归一化使其数值范围符合特定的正态分布，所以对第<code>i</code>个部分的归一化均可以用下式表示：<br>$$<br>\hat{x}_i&#x3D;\frac{1}{\sigma_i}(x_i-\mu_i)<br>$$<br>不同归一化的区别仅在于如何划分特征图。</p>
+<p>定义有一个特征图$\mathbf{x} \in \mathbb{R}^{N\times C \times H \times W}$，我们要对这个特征图做不同的归一化。</p>
+<p>**Batch Norm(BN)**[2]</p>
+<p>BN的应用应该说是最广的，但是其对batchsize的大小很敏感，只建议在batchsize不低于8的时候使用。</p>
+<p>BN逐通道地对整个batch的特征图做归一化，也就是说每次做归一化的特征图维度为$N\times H\times W$。下边通过代码表示一下计算均值和方差的过程：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># BN</span></span><br><span class="line">mean = x.mean(dim=(<span class="number">0</span>,<span class="number">2</span>,<span class="number">3</span>)) <span class="comment"># shape: [C,]</span></span><br><span class="line">std  = x.std(dim=(<span class="number">0</span>,<span class="number">2</span>,<span class="number">3</span>))  <span class="comment"># shape: [C,]</span></span><br></pre></td></tr></table></figure>
+
+<p>**Layer Norm(LN)**[3]</p>
+<p>LN多用于RNN，在卷积神经网络上很少使用。</p>
+<p>与BN相反，LN逐输入地对所有通道的特征图做归一化，每次归一化的特征图维度为$C\times H\times W$，代码表示为：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"># LN</span><br><span class="line">mean = x.mean(dim=(1,2,3)) # shape: [N,]</span><br><span class="line">std  = x.std(dim=(1,2,3))  # shape: [N,]</span><br></pre></td></tr></table></figure>
+
+<p>**Instance Norm(IN)**[4]</p>
+<p>IN主要用于生成式模型，如基于GAN的图像生成、图像风格迁移等。</p>
+<p>IN可以看作是BN或者LN的特例（$N&#x3D;1$时的BN或者$C&#x3D;1$时的LN），其只对单个特征图做归一化，单特征图维度为$H\times W$，代码表示为：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"># IN</span><br><span class="line">mean = x.mean(dim=(2,3)) # shape: [N. C]</span><br><span class="line">std  = x.std(dim=(2,3))  # shape: [N, C]</span><br></pre></td></tr></table></figure>
+
+<p><strong>Group Norm(GN)</strong></p>
+<p>由于GN的性能不受batchsize影响，在batchsize比较小的时候，可以用GN代码BN。</p>
+<p>GN将特征图沿通道均分为$G$组，分别为每一组做归一化，每次归一化的特征图维度为$(\frac CG)\times H\times W$，代码表示为：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># GN</span></span><br><span class="line">x_groups = x.chunk(G, dim=<span class="number">1</span>)</span><br><span class="line">x = torch.cat(x_groups, dim=<span class="number">0</span>) <span class="comment"># shape: [N*G, C//G, H, W]</span></span><br><span class="line">mean = x.mean(dim=(<span class="number">1</span>,<span class="number">2</span>,<span class="number">3</span>)) <span class="comment"># shape: [N*G,]</span></span><br><span class="line">mean = mean.view(N, G)     <span class="comment"># shape: [N, G]</span></span><br><span class="line">std = x.std(dim=(<span class="number">1</span>,<span class="number">2</span>,<span class="number">3</span>))  <span class="comment"># shape: [N*G,]</span></span><br><span class="line">std  = std.view(N, G)      <span class="comment"># shape: [N, G]</span></span><br></pre></td></tr></table></figure>
+
+<h2 id="从卷积说起——是否需要bias？"><a href="#从卷积说起——是否需要bias？" class="headerlink" title="从卷积说起——是否需要bias？"></a>从卷积说起——是否需要bias？</h2><p>我们在设计模型结构的时候应该经常看到类似下边的代码：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">class</span> <span class="title class_">BaseConv</span>(nn.Module):</span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">__init__</span>(<span class="params">self, in_channels, out_channels</span>) -&gt; <span class="literal">None</span>:</span><br><span class="line">        <span class="built_in">super</span>().__init__()</span><br><span class="line">        self.conv = nn.Sequential(</span><br><span class="line">            nn.Conv2d(in_channels, out_channels, kernel_size=<span class="number">3</span>, stride=<span class="number">2</span>, padding=<span class="number">1</span>, bias=<span class="literal">False</span>),</span><br><span class="line">            nn.BatchNorm2d(out_channels),</span><br><span class="line">            nn.ReLU(inplace=<span class="literal">True</span>)</span><br><span class="line">        )</span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">forward</span>(<span class="params">self, x</span>):</span><br><span class="line">        <span class="keyword">return</span> self.conv(x)</span><br></pre></td></tr></table></figure>
+
+<p><code>nn.Conv2d</code>中其他参数都很熟悉，<code>bias=False</code>是为什么呢？</p>
+<p>本节将探讨这一问题，解决什么归一化不需要bias、为什么不需要的问题。</p>
+<p><strong>卷积实现</strong></p>
+<p>在pytorch中，卷积通过类 <code>nn.Conv2d()</code>实现，卷积层的参数有权重（weight）$\mathbf{w}$和偏置（bias）$\mathbf{b}$。</p>
+<p>定义一个卷积层，其输入通道数为$C_{in}$，输出通道数为$C _{out}$，卷积核尺寸为$k$：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">conv = nn.Conv2d(C_in, C_out, kernel_size=k, stride=<span class="number">2</span>, padding=<span class="number">1</span>)</span><br></pre></td></tr></table></figure>
+
+<p>那么有$\mathbf{w} \in \mathbb{R}^{C_{out}\times C_{in}\times k \times k}$，$\mathbf{b} \in \mathbb{R}^{C_{out}}$。</p>
+<p>也就是说，对于每个输出层来说，都有一个维度为$C_{in}\times k \times k$的卷积核在输入特征图上滑动计算，计算的结果再与一个偏置值相加得到。所以说$\mathbf{b}$直接作用在通道方向上，<strong>逐通道</strong>地加。</p>
+<p>逐通道是不是很熟悉？没错，BN也是逐通道的，那么在使用BN的情况下，即使加了bias最后也会在减去均值的时候被去掉，因此，这时候添加bias将不会产生任何作用，反而白白占用显存和运算量。</p>
+<p><strong>数学推理证明</strong></p>
+<p>我们可以以BN为例推导一下这个过程。为简化过程，只考虑输出特征图的一个通道特征图$\mathbf{y}c \in \mathbb{R}^{N\times H\times W}, \forall c\in {1,2…C}$。那么$\mathbf{y}c$可以如下计算：<br>$$<br>\mathbf{y}c &#x3D; \mathbf{w}c\mathbf{x} + b,\ \forall \mathbf{w}c \in \mathbb{R}^{C{in}\times k \times k}<br>$$<br>归一化的首先将特征转换为标准正态分布，这个过程计算为：<br>$$<br>\mathbf{\hat y}c&#x3D;\frac {\mathbf{y}c-mean(\mathbf{y}c)}{std(\mathbf{y}c)} \ &#x3D;\frac {\mathbf{w}c\mathbf{x}+b - (mean(\mathbf{w}c\mathbf{x})+b)}{std(\mathbf{w}c\mathbf{x})} \ &#x3D; \frac{\mathbf{w}c\mathbf{x}-mean(\mathbf{w}c\mathbf{x})}{std(\mathbf{w}c\mathbf{x})}<br>$$<br> 从过程中可以很明显看到，偏差$b$在计算过程中被完全消去了。</p>
+<p>实际上，如果我们分别对LN、IN和GN都按上式计算的话就会发现，bias对于IN来说也是没有意义的，但是对于LN和GN则有意义。</p>
+<p><strong>结论</strong></p>
+<p>当归一化在与通道垂直的方向上做（逐通道）时，就不应该添加bias。如果模型中使用BN和IN，那么都不应该加bias，而GN和LN则应该加bias。</p>
+<h2 id="reference"><a href="#reference" class="headerlink" title="reference"></a>reference</h2><p>[1]. <em>Yuxin Wu and Kaiming He. Group Normalization. In ECCV, 2018.</em></p>
+<p>[2]. <em>Sergey Ioffe and Christian Szegedy. Batch Normalization: Accelerating Deep Network Training by Reducing Internal Covariate Shift. In ICML, 2015.</em></p>
+<p>[3]. <em>Lei Jimmy Ba, Jamie Ryan Kiros, and Geoffrey E. Hinton. Layer normalization. arXiv:1607.06450, 2016.</em></p>
+<p>[4]. <em>Dmitry Ulyanov, Andrea Vedaldi and Victor S. Lempitsky. Instance normalization: The missing ingredient for fast stylization. arXiv:1607.08022, 2016.</em></p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://example.com/2022/10/30/norm-layers/" data-id="clufcjlqi000g7o15f9769oiv" data-title="归一化层及在模型中的使用" class="article-share-link"><span class="fa fa-share">Share</span></a>
+      
+      
+      
+    </footer>
+  </div>
+  
+    
+<nav id="article-nav">
+  
+    <a href="/2022/12/04/pytorch-upsample-convtranspose/" id="article-nav-newer" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Newer</strong>
+      <div class="article-nav-title">
+        
+          pyTorch中Upsample和ConvTranspose区分
+        
+      </div>
+    </a>
+  
+  
+    <a href="/2022/10/23/linux-user-python-config/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Older</strong>
+      <div class="article-nav-title">linux中非root权限用户python配置详解</div>
+    </a>
+  
+</nav>
+
+  
+</article>
+
+
+</section>
+        
+          <aside id="sidebar">
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Categories</h3>
+    <div class="widget">
+      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/%E6%A8%A1%E5%9E%8B%E7%BB%93%E6%9E%84%E8%AE%BE%E8%AE%A1/">模型结构设计</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E6%B7%B1%E5%BA%A6%E5%AD%A6%E4%B9%A0/">深度学习</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E6%B7%B1%E5%BA%A6%E5%AD%A6%E4%B9%A0%E6%A8%A1%E5%9E%8B%E9%83%A8%E7%BD%B2/">深度学习模型部署</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E7%BC%96%E7%A8%8B%E8%AF%AD%E8%A8%80/">编程语言</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tags</h3>
+    <div class="widget">
+      <ul class="tag-list" itemprop="keywords"><li class="tag-list-item"><a class="tag-list-link" href="/tags/pyTorch/" rel="tag">pyTorch</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/python/" rel="tag">python</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E6%95%B0%E6%8D%AE%E9%9B%86/" rel="tag">数据集</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E8%AE%BA%E6%96%87/" rel="tag">论文</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tag Cloud</h3>
+    <div class="widget tagcloud">
+      <a href="/tags/pyTorch/" style="font-size: 10px;">pyTorch</a> <a href="/tags/python/" style="font-size: 20px;">python</a> <a href="/tags/%E6%95%B0%E6%8D%AE%E9%9B%86/" style="font-size: 15px;">数据集</a> <a href="/tags/%E8%AE%BA%E6%96%87/" style="font-size: 10px;">论文</a>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Archives</h3>
+    <div class="widget">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2024/03/">March 2024</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/03/">March 2023</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/02/">February 2023</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/12/">December 2022</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/10/">October 2022</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/08/">August 2022</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/07/">July 2022</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Recent Posts</h3>
+    <div class="widget">
+      <ul>
+        
+          <li>
+            <a href="/2024/03/30/Config-GitHub-Pages-with-Hexo/">使用Hexo搭建GitHub博客</a>
+          </li>
+        
+          <li>
+            <a href="/2024/03/30/hello-world/">Hello World</a>
+          </li>
+        
+          <li>
+            <a href="/2023/03/05/pytorch-model-to-onnx/">pyTorch模型转onnx</a>
+          </li>
+        
+          <li>
+            <a href="/2023/03/04/pytorch-model-to-torchscript/">pyTorch模型转torchscript</a>
+          </li>
+        
+          <li>
+            <a href="/2023/02/19/python-file-lock/">python实现文件锁</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+
+  
+</aside>
+        
+      </div>
+      <footer id="footer">
+  
+  <div class="outer">
+    <div id="footer-info" class="inner">
+      
+      &copy; 2024 John Doe<br>
+      Powered by <a href="https://hexo.io/" target="_blank">Hexo</a>
+    </div>
+  </div>
+</footer>
+
+    </div>
+    <nav id="mobile-nav">
+  
+    <a href="/" class="mobile-nav-link">Home</a>
+  
+    <a href="/archives" class="mobile-nav-link">Archives</a>
+  
+</nav>
+    
+
+
+<script src="/js/jquery-3.6.4.min.js"></script>
+
+
+
+  
+<script src="/fancybox/jquery.fancybox.min.js"></script>
+
+
+
+
+<script src="/js/script.js"></script>
+
+
+
+
+
+  </div>
+</body>
+</html>

@@ -1,0 +1,669 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  
+  <title>Hexo</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <meta property="og:type" content="website">
+<meta property="og:title" content="Hexo">
+<meta property="og:url" content="http://example.com/page/2/index.html">
+<meta property="og:site_name" content="Hexo">
+<meta property="og:locale" content="en_US">
+<meta property="article:author" content="John Doe">
+<meta name="twitter:card" content="summary">
+  
+    <link rel="alternate" href="/atom.xml" title="Hexo" type="application/atom+xml">
+  
+  
+    <link rel="shortcut icon" href="/favicon.png">
+  
+  
+  
+<link rel="stylesheet" href="/css/style.css">
+
+  
+    
+<link rel="stylesheet" href="/fancybox/jquery.fancybox.min.css">
+
+  
+  
+<meta name="generator" content="Hexo 7.1.1"></head>
+
+<body>
+  <div id="container">
+    <div id="wrap">
+      <header id="header">
+  <div id="banner"></div>
+  <div id="header-outer" class="outer">
+    <div id="header-title" class="inner">
+      <h1 id="logo-wrap">
+        <a href="/" id="logo">Hexo</a>
+      </h1>
+      
+    </div>
+    <div id="header-inner" class="inner">
+      <nav id="main-nav">
+        <a id="main-nav-toggle" class="nav-icon"><span class="fa fa-bars"></span></a>
+        
+          <a class="main-nav-link" href="/">Home</a>
+        
+          <a class="main-nav-link" href="/archives">Archives</a>
+        
+      </nav>
+      <nav id="sub-nav">
+        
+        
+          <a class="nav-icon" href="/atom.xml" title="RSS Feed"><span class="fa fa-rss"></span></a>
+        
+        <a class="nav-icon nav-search-btn" title="Search"><span class="fa fa-search"></span></a>
+      </nav>
+      <div id="search-form-wrap">
+        <form action="//google.com/search" method="get" accept-charset="UTF-8" class="search-form"><input type="search" name="q" class="search-form-input" placeholder="Search"><button type="submit" class="search-form-submit">&#xF002;</button><input type="hidden" name="sitesearch" value="http://example.com"></form>
+      </div>
+    </div>
+  </div>
+</header>
+
+      <div class="outer">
+        <section id="main">
+  
+    <article id="post-coco-dataset-label-3" class="h-entry article article-type-post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
+  <div class="article-meta">
+    <a href="/2022/08/06/coco-dataset-label-3/" class="article-date">
+  <time class="dt-published" datetime="2022-08-06T14:58:09.000Z" itemprop="datePublished">2022-08-06</time>
+</a>
+    
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/%E6%B7%B1%E5%BA%A6%E5%AD%A6%E4%B9%A0/">深度学习</a>
+  </div>
+
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="p-name article-title" href="/2022/08/06/coco-dataset-label-3/">深入探究COCO数据集（三）</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="e-content article-entry" itemprop="articleBody">
+      
+        <p>本文是专题 深入探究COCO数据集标签 的第三部分，主要讲解如何加载自己的COCO style的数据集。其他部分链接：</p>
+<p><a target="_blank" rel="noopener" href="http://localhost/wordpress/index.php/2022/07/31/coco_dataset_label_1/">深入探究COCO数据集（一）</a>——COCO标签格式</p>
+<p><a target="_blank" rel="noopener" href="http://localhost/wordpress/index.php/2022/08/06/coco_dataset_label_2/">深入探究COCO数据集（二）</a>——制作COCO style的数据集</p>
+<h2 id="pycocotools"><a href="#pycocotools" class="headerlink" title="pycocotools"></a>pycocotools</h2><p><code>pycocotools</code>提供了COCO数据集交互的接口，加载COCO style的数据集通常使用其完成，更准确地说，是通过<code>pycocotools.coco</code>中的<code>COCO</code>类实现。标签加载过程如下：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">from pycocotools.coco import COCO</span><br><span class="line">coco = COCO(info_file)</span><br></pre></td></tr></table></figure>
+
+<p>得到一个<code>COCO</code>对象之后呢？别急，先来说几个<code>COCO</code>类中的接口：</p>
+<ol>
+<li>属性<code>anns</code>：字典，键为标签id（<code>ann_id</code>），值为对应的字典形式的标签信息；</li>
+<li>属性<code>imgs</code>：字典，键为图像id（<code>image_id</code>），值为对应的字典形式的图像信息；</li>
+<li>属性<code>cats</code>：字典，键为类别id（<code>category_id</code>），值为对应类别字典形式的信息；</li>
+<li>属性<code>imgToAnns</code>：字典，键为图像id（<code>image_id</code>），值为对应的字典形式的标签信息；</li>
+<li>属性<code>catToImgs</code>：字典，键为类别id（<code>category_id</code>），值为对应的图像id（<code>image_id</code>）；</li>
+<li>方法<code>getAnnIds()</code>：根据图像id（<code>image_id</code>）、类别id（<code>category_id</code>）获取对应的标签id（<code>ann_id</code>），如果没有参数传回一个包含全部标签id的列表；</li>
+<li>方法<code>getImgIds()</code>：根据图像id（<code>image_id</code>）、类别id（<code>category_id</code>）获取对应的图像id（<code>image_id</code>），如果没有参数传回一个包含全部图像id的列表；</li>
+<li>方法<code>getCatIds()</code>：根据类别名字、类别父类名字、类别id（<code>category_id</code>）获取对应的类别id（<code>category_id</code>），如果没有参数传回一个包含全部类别id的列表；</li>
+<li>方法<code>loadAnns()</code>：获得给定标签（<code>ann_id</code>）对应的字典形式的标签信息，用<code>anns</code>属性实现；</li>
+<li>方法<code>loadImgs()</code>：获得给定图像（<code>image_id</code>）对应的字典形式的图像信息，用<code>imgs</code>属性实现；</li>
+<li>方法<code>loadCats()</code>：获得给定类别（<code>category_id</code>）对应的字典形式的类别信息，用<code>cats</code>属性实现；</li>
+<li>方法<code>annToMask()</code>：获得给定标签信息（键值对字典）对应的掩膜。</li>
+</ol>
+<h2 id="COCO-style数据加载"><a href="#COCO-style数据加载" class="headerlink" title="COCO style数据加载"></a>COCO style数据加载</h2><p>其实加载COCO数据集的过程无非就是运用上述属性和方法获得对应信息的过程，掌握了上述接口加载数据就很简单了。</p>
+<p>由于很多开源代码中都写有COCO的数据加载类，大多数情况下我们无须自己重写，但是在一些特殊情况下需要根据需求重写或修改，个人比较推荐参考YOLACT代码中的<a target="_blank" rel="noopener" href="https://github.com/dbolya/yolact/blob/master/data/coco.py">数据加载</a>，因为代码逻辑比较简单清晰。</p>
+<p>这里放一个简单的目标检测数据加载模板：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> cv2</span><br><span class="line"><span class="keyword">import</span> os.path <span class="keyword">as</span> osp</span><br><span class="line"><span class="keyword">import</span> numpy <span class="keyword">as</span> np</span><br><span class="line"></span><br><span class="line"><span class="keyword">class</span> <span class="title class_">COCODataset</span>():</span><br><span class="line">    <span class="string">&quot;&quot;&quot;</span></span><br><span class="line"><span class="string">    COCO style dataset</span></span><br><span class="line"><span class="string">    &quot;&quot;&quot;</span></span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">__init__</span>(<span class="params"></span></span><br><span class="line"><span class="params">        self,</span></span><br><span class="line"><span class="params">        data_dir=<span class="literal">None</span>,</span></span><br><span class="line"><span class="params">        json_file=<span class="string">&quot;coco_train.json&quot;</span>,</span></span><br><span class="line"><span class="params">        name=<span class="string">&quot;train&quot;</span>,</span></span><br><span class="line"><span class="params">        area_threshold=-<span class="number">1</span>,</span></span><br><span class="line"><span class="params">    </span>):</span><br><span class="line">        <span class="string">&quot;&quot;&quot;</span></span><br><span class="line"><span class="string">        Dataset initialization. Annotation data are read into memory by COCO API.</span></span><br><span class="line"><span class="string">        Args:</span></span><br><span class="line"><span class="string">            data_dir (str): dataset root directory</span></span><br><span class="line"><span class="string">            json_file (str): annotation json file name</span></span><br><span class="line"><span class="string">            name (str): data name (e.g. &#x27;train&#x27; or &#x27;val&#x27;)</span></span><br><span class="line"><span class="string">           area_threshold(int): area threshold for object</span></span><br><span class="line"><span class="string">        &quot;&quot;&quot;</span></span><br><span class="line">        self.area_thres = area_threshold</span><br><span class="line">        self.data_dir = data_dir</span><br><span class="line">        self.json_file = json_file</span><br><span class="line">        self.imgs = <span class="literal">None</span></span><br><span class="line">        self.name = name</span><br><span class="line">        self.init()</span><br><span class="line"></span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">init</span>(<span class="params">self</span>):</span><br><span class="line">        <span class="keyword">from</span> pycocotools.coco <span class="keyword">import</span> COCO</span><br><span class="line">        self.coco = COCO(osp.join(self.data_dir, <span class="string">&quot;annotations&quot;</span>, self.json_file))</span><br><span class="line"></span><br><span class="line">        <span class="comment"># <span class="doctag">NOTE:</span> do not use self.coco.getImgIds()</span></span><br><span class="line">        self.ids = <span class="built_in">list</span>(self.coco.imgToAnns.keys()) </span><br><span class="line">        self.class_ids = <span class="built_in">sorted</span>(self.coco.getCatIds())</span><br><span class="line">        self.cats = self.coco.loadCats(self.coco.getCatIds())</span><br><span class="line">        self._classes = <span class="built_in">tuple</span>([c[<span class="string">&quot;name&quot;</span>] <span class="keyword">for</span> c <span class="keyword">in</span> self.cats])</span><br><span class="line"></span><br><span class="line">        self.annotations = self._load_coco_annotations()</span><br><span class="line"></span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">__getitem__</span>(<span class="params">self, index</span>):</span><br><span class="line">        <span class="comment"># <span class="doctag">NOTE:</span> in case empty label</span></span><br><span class="line">        max_iter = <span class="number">5</span></span><br><span class="line">        <span class="keyword">for</span> _ <span class="keyword">in</span> <span class="built_in">range</span>(max_iter):</span><br><span class="line">            res, img_info,  _ = self.annotations[index]</span><br><span class="line">            <span class="keyword">if</span> res.size &gt; <span class="number">0</span>:</span><br><span class="line">                <span class="keyword">break</span></span><br><span class="line">            index = np.random.randint(<span class="number">0</span>, self.__len__())</span><br><span class="line">        id_ = self.ids[index]</span><br><span class="line"></span><br><span class="line">        <span class="keyword">if</span> self.imgs <span class="keyword">is</span> <span class="keyword">not</span> <span class="literal">None</span>:</span><br><span class="line">            pad_img = self.imgs[index]</span><br><span class="line">            img = pad_img[: img_info[<span class="number">0</span>], : img_info[<span class="number">1</span>], :].copy()</span><br><span class="line">        <span class="keyword">else</span>:</span><br><span class="line">            img = self.load_image(index)</span><br><span class="line"></span><br><span class="line">        <span class="keyword">return</span> img, res.copy(), img_info, np.array([id_])</span><br><span class="line"></span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">__len__</span>(<span class="params">self</span>):</span><br><span class="line">        <span class="keyword">return</span> <span class="built_in">len</span>(self.ids)</span><br><span class="line"></span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">_load_coco_annotations</span>(<span class="params">self</span>):</span><br><span class="line">        <span class="keyword">return</span> [self.load_anno_from_ids(_ids) <span class="keyword">for</span> _ids <span class="keyword">in</span> self.ids]</span><br><span class="line"></span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">load_anno_from_ids</span>(<span class="params">self, id_</span>):</span><br><span class="line">        im_ann = self.coco.loadImgs(id_)[<span class="number">0</span>]</span><br><span class="line">        width = im_ann[<span class="string">&quot;width&quot;</span>]</span><br><span class="line">        height = im_ann[<span class="string">&quot;height&quot;</span>]</span><br><span class="line">        anno_ids = self.coco.getAnnIds(imgIds=[<span class="built_in">int</span>(id_)], iscrowd=<span class="literal">False</span>)</span><br><span class="line">        annotations = self.coco.loadAnns(anno_ids)</span><br><span class="line">        objs = []</span><br><span class="line">        <span class="keyword">for</span> obj <span class="keyword">in</span> annotations:</span><br><span class="line">            x1 = np.<span class="built_in">max</span>((<span class="number">0</span>, obj[<span class="string">&quot;bbox&quot;</span>][<span class="number">0</span>]))</span><br><span class="line">            y1 = np.<span class="built_in">max</span>((<span class="number">0</span>, obj[<span class="string">&quot;bbox&quot;</span>][<span class="number">1</span>]))</span><br><span class="line">            x2 = np.<span class="built_in">min</span>((width, x1 + np.<span class="built_in">max</span>((<span class="number">0</span>, obj[<span class="string">&quot;bbox&quot;</span>][<span class="number">2</span>]))))</span><br><span class="line">            y2 = np.<span class="built_in">min</span>((height, y1 + np.<span class="built_in">max</span>((<span class="number">0</span>, obj[<span class="string">&quot;bbox&quot;</span>][<span class="number">3</span>]))))</span><br><span class="line">            <span class="comment"># <span class="doctag">NOTE:</span> we filter the small object, which is different from the super method</span></span><br><span class="line">            area_thres = <span class="built_in">max</span>(self.area_thres, <span class="number">0</span>)</span><br><span class="line">            <span class="keyword">if</span> obj[<span class="string">&quot;area&quot;</span>] &gt; area_thres <span class="keyword">and</span> x2 &gt;= x1 <span class="keyword">and</span> y2 &gt;= y1:</span><br><span class="line">                obj[<span class="string">&quot;clean_bbox&quot;</span>] = [x1, y1, x2, y2]</span><br><span class="line">                objs.append(obj)</span><br><span class="line"></span><br><span class="line">        num_objs = <span class="built_in">len</span>(objs)</span><br><span class="line"></span><br><span class="line">        res = np.zeros((num_objs, <span class="number">5</span>))</span><br><span class="line"></span><br><span class="line">        <span class="keyword">for</span> ix, obj <span class="keyword">in</span> <span class="built_in">enumerate</span>(objs):</span><br><span class="line">            cls = self.class_ids.index(obj[<span class="string">&quot;category_id&quot;</span>])</span><br><span class="line">            res[ix, <span class="number">0</span>:<span class="number">4</span>] = obj[<span class="string">&quot;clean_bbox&quot;</span>]</span><br><span class="line">            res[ix, <span class="number">4</span>] = cls</span><br><span class="line"></span><br><span class="line">        img_info = (height, width)</span><br><span class="line">        file_name = (</span><br><span class="line">            im_ann[<span class="string">&quot;file_name&quot;</span>]</span><br><span class="line">            <span class="keyword">if</span> <span class="string">&quot;file_name&quot;</span> <span class="keyword">in</span> im_ann</span><br><span class="line">            <span class="keyword">else</span> <span class="string">&quot;&#123;:012&#125;&quot;</span>.<span class="built_in">format</span>(id_) + <span class="string">&quot;.jpg&quot;</span></span><br><span class="line">        )</span><br><span class="line"></span><br><span class="line">        <span class="keyword">return</span> (res, img_info, file_name)</span><br><span class="line"></span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">load_image</span>(<span class="params">self, index</span>):</span><br><span class="line">        file_name = self.annotations[index][-<span class="number">1</span>]</span><br><span class="line">        <span class="keyword">assert</span> osp.exists(file_name), <span class="string">f&quot;file named <span class="subst">&#123;file_name&#125;</span> not found&quot;</span></span><br><span class="line">        img = cv2.imread(file_name)</span><br><span class="line"></span><br><span class="line">        <span class="keyword">return</span> img</span><br></pre></td></tr></table></figure>
+
+<p>至此，深入探究COCO数据集标签这一专题就结束了，COCO数据集被广泛使用于检测和分割领域，即使我们不直接使用COCO数据集本身，掌握其标签格式进而能够创建和加载自己的COCO style数据集在使用相关模型的时候也很有益。希望本专题能抛砖引玉，给读者提供一些参考。</p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://example.com/2022/08/06/coco-dataset-label-3/" data-id="clufcjlqe00087o156u4o6g5m" data-title="深入探究COCO数据集（三）" class="article-share-link"><span class="fa fa-share">Share</span></a>
+      
+      
+      
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/%E6%95%B0%E6%8D%AE%E9%9B%86/" rel="tag">数据集</a></li></ul>
+
+    </footer>
+  </div>
+  
+</article>
+
+
+
+  
+    <article id="post-coco-dataset-label-2" class="h-entry article article-type-post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
+  <div class="article-meta">
+    <a href="/2022/08/06/coco-dataset-label-2/" class="article-date">
+  <time class="dt-published" datetime="2022-08-06T14:56:36.000Z" itemprop="datePublished">2022-08-06</time>
+</a>
+    
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/%E6%B7%B1%E5%BA%A6%E5%AD%A6%E4%B9%A0/">深度学习</a>
+  </div>
+
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="p-name article-title" href="/2022/08/06/coco-dataset-label-2/">深入探究COCO数据集（二）</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="e-content article-entry" itemprop="articleBody">
+      
+        <p>本文是专题 深入探究COCO数据集标签 的第二部分，主要讲解如何制作COCO style的数据集。其他部分链接：</p>
+<p><a target="_blank" rel="noopener" href="http://localhost/wordpress/index.php/2022/07/31/coco_dataset_label_1/">深入探究COCO数据集（一）</a>——COCO标签格式</p>
+<p><a target="_blank" rel="noopener" href="http://localhost/wordpress/index.php/2022/08/06/coco_dataset_label_3/">深入探究COCO数据集（三）</a>——加载数据集</p>
+<h2 id="制作COCO-style的检测数据集"><a href="#制作COCO-style的检测数据集" class="headerlink" title="制作COCO style的检测数据集"></a>制作COCO style的检测数据集</h2><p>在第一部分中我们详细讲了COCO的标签结构，知道了COCO数据集标签的构成，自己制作COCO style的数据集就很简单了，这里依然只从标签的角度讲解。</p>
+<p>为简单起见，这里以两类为例，类别分别为<code>A</code>和<code>B</code>。 假如我要做一个<strong>检测任务</strong>，目前我的每一个图像都有一个对应的<code>.txt</code>文件记录图像的标签信息，文件中每一个标签是一个五元组，第一个值为类别索引，其余4个分别为边界框左上和右下角坐标。</p>
+<p>那么一开始就可以先这样预定义标签：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line">label_json = &#123;</span><br><span class="line">    <span class="string">&quot;info&quot;</span> : &#123;</span><br><span class="line">        <span class="string">&quot;contributor&quot;</span>   : <span class="string">&quot;&quot;</span>, </span><br><span class="line">        <span class="string">&quot;date_created&quot;</span>  : <span class="string">&quot;&quot;</span>, </span><br><span class="line">        <span class="string">&quot;description&quot;</span>   : <span class="string">&quot;&quot;</span>, </span><br><span class="line">        <span class="string">&quot;url&quot;</span>           : <span class="string">&quot;&quot;</span>, </span><br><span class="line">        <span class="string">&quot;version&quot;</span>       : <span class="string">&quot;&quot;</span>, </span><br><span class="line">        <span class="string">&quot;year&quot;</span>          : <span class="string">&quot;&quot;</span></span><br><span class="line">    &#125;,</span><br><span class="line">    <span class="string">&quot;licenses&quot;</span>      : [&#123;<span class="string">&quot;name&quot;</span>: <span class="string">&quot;&quot;</span>, <span class="string">&quot;id&quot;</span>: <span class="number">0</span>, <span class="string">&quot;url&quot;</span>: <span class="string">&quot;&quot;</span>&#125;],</span><br><span class="line">    <span class="comment"># the main annotation infomation</span></span><br><span class="line">    <span class="string">&quot;categories&quot;</span>    : [</span><br><span class="line">        &#123;<span class="string">&quot;supercategory&quot;</span> : <span class="string">&quot;&quot;</span>, <span class="string">&quot;name&quot;</span>: <span class="string">&#x27;A&#x27;</span>, <span class="string">&quot;id&quot;</span>: <span class="number">1</span>&#125;,</span><br><span class="line">        &#123;<span class="string">&quot;supercategory&quot;</span> : <span class="string">&quot;&quot;</span>, <span class="string">&quot;name&quot;</span>: <span class="string">&#x27;B&#x27;</span>, <span class="string">&quot;id&quot;</span>: <span class="number">2</span>&#125;,</span><br><span class="line">    ],</span><br><span class="line">    <span class="string">&quot;images&quot;</span>        : [],</span><br><span class="line">    <span class="string">&quot;annotations&quot;</span>   : [],</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>之后依次从<code>.txt</code>文件中读取标签，将标签和对应文件信息写入字典<code>label_json</code>中的<code>images</code>项和<code>annotations</code>项即可。程序如下：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> os</span><br><span class="line"><span class="keyword">import</span> cv2</span><br><span class="line"><span class="keyword">import</span> json</span><br><span class="line"><span class="keyword">import</span> warnings</span><br><span class="line"><span class="keyword">import</span> numpy <span class="keyword">as</span> np</span><br><span class="line"><span class="comment"># root</span></span><br><span class="line"><span class="comment"># ├──images</span></span><br><span class="line"><span class="comment"># │     ├──train</span></span><br><span class="line"><span class="comment"># │     └──val</span></span><br><span class="line"><span class="comment"># ├──labels</span></span><br><span class="line"><span class="comment"># │     ├──train</span></span><br><span class="line"><span class="comment"># │     └──val</span></span><br><span class="line"><span class="comment"># └──annotation</span></span><br><span class="line"><span class="comment">#       └── annotation.json</span></span><br><span class="line">json_path = <span class="string">&quot;annotation/annotation.json&quot;</span></span><br><span class="line">ann_id = <span class="number">0</span></span><br><span class="line"><span class="keyword">for</span> <span class="built_in">id</span>, file <span class="keyword">in</span> <span class="built_in">enumerate</span>(txt_list):</span><br><span class="line">    img_path = file.replace(</span><br><span class="line">        <span class="string">&quot;labels&quot;</span>, <span class="string">&quot;images&quot;</span></span><br><span class="line">    ).replace(</span><br><span class="line">        <span class="string">&quot;.txt&quot;</span>, <span class="string">&quot;.jpg&quot;</span></span><br><span class="line">    )</span><br><span class="line">    <span class="keyword">if</span> <span class="keyword">not</span> os.path.exists(img_path):</span><br><span class="line">        <span class="keyword">continue</span></span><br><span class="line"></span><br><span class="line">    H, W = cv2.imread(img_path).shape[:<span class="number">2</span>]</span><br><span class="line">    <span class="comment"># part1: images infomation</span></span><br><span class="line">    img_info = &#123;</span><br><span class="line">        <span class="string">&quot;license&quot;</span> : <span class="number">0</span>,</span><br><span class="line">        <span class="string">&quot;filename&quot;</span>: img_path,</span><br><span class="line">        <span class="string">&quot;height&quot;</span>: H,</span><br><span class="line">        <span class="string">&quot;width&quot;</span>: W,</span><br><span class="line">        <span class="string">&quot;id&quot;</span>: <span class="built_in">id</span></span><br><span class="line">    &#125;</span><br><span class="line">    label_json[<span class="string">&quot;images&quot;</span>].append(img_info)</span><br><span class="line"></span><br><span class="line">    <span class="comment"># labels</span></span><br><span class="line">    <span class="keyword">with</span> warnings.catch_warnings():</span><br><span class="line">        <span class="comment"># ignore the warning information when the file is empty</span></span><br><span class="line">        warnings.simplefilter(<span class="string">&quot;ignore&quot;</span>)</span><br><span class="line">        labels = np.loadtxt(file)</span><br><span class="line"></span><br><span class="line">    targets = np.zeros((<span class="built_in">len</span>(labels), <span class="number">5</span>))</span><br><span class="line">    <span class="keyword">if</span> labels.size == <span class="number">0</span>:</span><br><span class="line">        <span class="keyword">continue</span></span><br><span class="line">    <span class="keyword">if</span> labels.ndim == <span class="number">1</span>:</span><br><span class="line">        labels = labels[<span class="literal">None</span>]</span><br><span class="line">    <span class="comment"># part2: annotations information</span></span><br><span class="line">    <span class="keyword">for</span> label <span class="keyword">in</span> labels:</span><br><span class="line">        target_info = &#123;</span><br><span class="line">            <span class="string">&quot;segmentation&quot;</span>  : [],</span><br><span class="line">            <span class="string">&quot;category_id&quot;</span>   : <span class="built_in">int</span>(label[<span class="number">0</span>]),</span><br><span class="line">            <span class="string">&quot;image_id&quot;</span>      : <span class="built_in">id</span>,</span><br><span class="line">            <span class="string">&quot;id&quot;</span>            : ann_id,</span><br><span class="line">            <span class="string">&quot;area&quot;</span>          : <span class="built_in">round</span>((label[<span class="number">3</span>]-label[<span class="number">1</span>])*(label[<span class="number">4</span>]-label[<span class="number">2</span>]), <span class="number">6</span>),</span><br><span class="line">            <span class="string">&quot;bbox&quot;</span>          : xyxy2xywh(label, (H,W)),</span><br><span class="line">            <span class="string">&quot;iscrowd&quot;</span>       : <span class="number">0</span>,</span><br><span class="line">        &#125;</span><br><span class="line">        ann_id += <span class="number">1</span></span><br><span class="line">        label_json[<span class="string">&quot;annotations&quot;</span>].append(target_info)</span><br><span class="line"><span class="comment"># save the labels in a json file</span></span><br><span class="line"><span class="keyword">with</span> <span class="built_in">open</span>(json_path, <span class="string">&#x27;w&#x27;</span>) <span class="keyword">as</span> json_f:</span><br><span class="line">    json.dump(label_json, json_f)</span><br></pre></td></tr></table></figure>
+
+<p>至此，COCO style的目标检测数据集就构建完成了。</p>
+<h2 id="从二维掩膜构建COCO-style数据集"><a href="#从二维掩膜构建COCO-style数据集" class="headerlink" title="从二维掩膜构建COCO style数据集"></a>从二维掩膜构建COCO style数据集</h2><p>上边分析过了如何制作COCO style的目标检测数据集，那么如果要做COCO style的分割数据集该怎么实现呢？ 其实这个过程和上边是一样的，难度仅在于如何将二维掩膜转换成COCO的polygon形式。polygon形式无非就是物体边缘轮廓上的一系列点集，要想得到就必须找到物体的轮廓，这一功能可以使用<code>openCV</code>中的<code>findContours</code>函数实现：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">contours, _ = cv2.findContours(</span><br><span class="line">    mask, </span><br><span class="line">    cv2.RETR_TREE, </span><br><span class="line">    cv2.CHAIN_APPROX_NONE</span><br><span class="line">)</span><br></pre></td></tr></table></figure>
+
+<p>篇幅所限，这里不再详细讲解<code>cv2.findContours</code>的用法，对于二维掩膜来说，上边的代码足矣。返回的<code>contours</code>是一个列表结构，列表中的每一项都是一个封闭的轮廓点集，接下来遍历这些轮廓依次添加即可。</p>
+<p>通常在实际情况中，我们往往还会有些“特别”的要求，本文给出两种情况考量。</p>
+<ol>
+<li>轮廓点集太过密集，能不能用更少的点表示？ 当然是可以的，<code>openCV</code>中的<code>cv2.approxPolyDP</code> 可以实现这个功能，其将轮廓形状近似到另外一种由更少点组成的轮廓形状，新轮廓的点的数目准确度（函数第二个参数）来决定；</li>
+<li>能不能补充上面积和边界框信息？ <code>cv2.contourArea</code>可以获得轮廓的面积信息，<code>cv2.boundingRect</code>可以获得轮廓的边界框，返回<code>[x,y,w,h]</code>格式的边界框。</li>
+</ol>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line">annotations = []</span><br><span class="line"><span class="keyword">for</span> contour <span class="keyword">in</span> contours:</span><br><span class="line">    <span class="comment"># contour approximate</span></span><br><span class="line">    epsilon = <span class="number">0.01</span> * cv2.arcLength(contour, <span class="literal">True</span>)</span><br><span class="line">    contour = cv2.approxPolyDP(contour, epsilon, <span class="literal">True</span>)</span><br><span class="line"></span><br><span class="line">    polygon = []</span><br><span class="line">    <span class="keyword">for</span> point <span class="keyword">in</span> contour:</span><br><span class="line">        polygon.extend(</span><br><span class="line">            [point[<span class="number">0</span>][<span class="number">0</span>], point[<span class="number">0</span>][<span class="number">1</span>]]</span><br><span class="line">        )</span><br><span class="line">    <span class="comment"># get area</span></span><br><span class="line">    area = cv2.contourArea(contour)</span><br><span class="line">    <span class="comment"># get bounding box</span></span><br><span class="line">    bbox = cv2.boundingRect(contour)</span><br><span class="line"></span><br><span class="line">    annotations.append([polygon, area, bbox])</span><br></pre></td></tr></table></figure>
+
+<p>标签中其他信息如<code>image_id</code>和<code>category_id</code>等获得方法和获取检测数据集一样，在此不再赘述。</p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://example.com/2022/08/06/coco-dataset-label-2/" data-id="clufcjlqc00057o15hz62665p" data-title="深入探究COCO数据集（二）" class="article-share-link"><span class="fa fa-share">Share</span></a>
+      
+      
+      
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/%E6%95%B0%E6%8D%AE%E9%9B%86/" rel="tag">数据集</a></li></ul>
+
+    </footer>
+  </div>
+  
+</article>
+
+
+
+  
+    <article id="post-coco-dataset-label-1" class="h-entry article article-type-post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
+  <div class="article-meta">
+    <a href="/2022/07/31/coco-dataset-label-1/" class="article-date">
+  <time class="dt-published" datetime="2022-07-31T09:37:51.000Z" itemprop="datePublished">2022-07-31</time>
+</a>
+    
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/%E6%B7%B1%E5%BA%A6%E5%AD%A6%E4%B9%A0/">深度学习</a>
+  </div>
+
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="p-name article-title" href="/2022/07/31/coco-dataset-label-1/">深入探究COCO数据集（一）</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="e-content article-entry" itemprop="articleBody">
+      
+        <p>COCO数据集是目标检测和实例分割领域的经典数据集，从事相关领域自然免不了与其打交道。网上对于COCO数据集的介绍已经很多，这里不再赘述。本部分主要从标签的角度探究一下COCO数据集的检测部分，由于内容较多，我将其整理为一个专题，分为三个部分，分别是：</p>
+<p><a target="_blank" rel="noopener" href="http://localhost/wordpress/index.php/2022/07/31/coco_dataset_label_1/">深入探究COCO数据集（一）</a>——COCO标签格式</p>
+<p><a target="_blank" rel="noopener" href="http://localhost/wordpress/index.php/2022/08/06/coco_dataset_label_2/">深入探究COCO数据集（二）</a>——制作COCO style的数据集</p>
+<p><a target="_blank" rel="noopener" href="http://localhost/wordpress/index.php/2022/08/06/coco_dataset_label_3/">深入探究COCO数据集（三）</a>——加载数据集</p>
+<p>本节是专题的第一部分，主要分析讲解一下COCO数据集的标签格式。</p>
+<h2 id="COCO标签格式"><a href="#COCO标签格式" class="headerlink" title="COCO标签格式"></a>COCO标签格式</h2><p>COCO标签以单个json文件的形式存储，整个标签文件可以视为一个字典，其中有5个键值对，键（key）分别是<code>info</code>、<code>licenses</code>、<code>categories</code>、<code>images</code>和<code>annotations</code>。</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">annotation</span><br><span class="line">├──info</span><br><span class="line">├──licenses</span><br><span class="line">├──categories</span><br><span class="line">├──images</span><br><span class="line">└──annotations</span><br></pre></td></tr></table></figure>
+
+<p>其中<code>info</code>提供数据集的一些信息，如<code>contributor</code>、<code>description</code>等；<code>licenses</code>提供数据集使用的许可证。<strong>这两项并不提供数据集标签的重要信息</strong>。在<code>val2017</code>中这两项的值为（<code>licenses</code>仅列出部分）：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># info</span></span><br><span class="line"><span class="string">&quot;info&quot;</span>: &#123;</span><br><span class="line">    <span class="string">&quot;description&quot;</span>: <span class="string">&quot;COCO 2017 Dataset&quot;</span>,</span><br><span class="line">    <span class="string">&quot;url&quot;</span>: <span class="string">&quot;http://cocodataset.org&quot;</span>,</span><br><span class="line">    <span class="string">&quot;version&quot;</span>: <span class="string">&quot;1.0&quot;</span>,</span><br><span class="line">    <span class="string">&quot;year&quot;</span>: <span class="number">2017</span>,</span><br><span class="line">    <span class="string">&quot;contributor&quot;</span>: <span class="string">&quot;COCO Consortium&quot;</span>,</span><br><span class="line">    <span class="string">&quot;date_created&quot;</span>: <span class="string">&quot;2017/09/01&quot;</span></span><br><span class="line">&#125;</span><br><span class="line"><span class="comment"># licenses</span></span><br><span class="line"><span class="string">&quot;licenses&quot;</span>: [</span><br><span class="line">     &#123;</span><br><span class="line">         <span class="string">&quot;url&quot;</span>: <span class="string">&quot;http://creativecommons.org/licenses/by-nc-sa/2.0/&quot;</span>,</span><br><span class="line">         <span class="string">&quot;id&quot;</span>: <span class="number">1</span>,</span><br><span class="line">         <span class="string">&quot;name&quot;</span>: <span class="string">&quot;Attribution-NonCommercial-ShareAlike License&quot;</span></span><br><span class="line">     &#125;,</span><br><span class="line">     <span class="comment"># ......</span></span><br><span class="line">     &#123;</span><br><span class="line">         <span class="string">&quot;url&quot;</span>: <span class="string">&quot;http://www.usa.gov/copyright.shtml&quot;</span>,</span><br><span class="line">         <span class="string">&quot;id&quot;</span>: <span class="number">8</span>,</span><br><span class="line">         <span class="string">&quot;name&quot;</span>: <span class="string">&quot;United States Government Work&quot;</span></span><br><span class="line">     &#125;</span><br><span class="line">]</span><br></pre></td></tr></table></figure>
+
+<p><code>categories</code>是一个列表，提供数据集每一个类的类别信息。每一类用列表中的一个字典表示，字典键值对有类别唯一索引<code>id</code>，类别名称<code>name</code>和类别父类<code>supercategory</code>。</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="string">&quot;categories&quot;</span>: [</span><br><span class="line">    &#123;<span class="string">&quot;supercategory&quot;</span>: <span class="string">&quot;person&quot;</span>,<span class="string">&quot;id&quot;</span>: <span class="number">1</span>,<span class="string">&quot;name&quot;</span>: <span class="string">&quot;person&quot;</span>&#125;,</span><br><span class="line">    <span class="comment"># ......</span></span><br><span class="line">    &#123;<span class="string">&quot;supercategory&quot;</span>: <span class="string">&quot;indoor&quot;</span>,<span class="string">&quot;id&quot;</span>: <span class="number">90</span>,<span class="string">&quot;name&quot;</span>: <span class="string">&quot;toothbrush&quot;</span>&#125;</span><br><span class="line">]</span><br></pre></td></tr></table></figure>
+
+<p><code>images</code>是一个列表，提供数据集中全部图像的信息，列表中每一项是一个字典，代表一张图像信息。字典中比较重要的键是图像文件名<code>file_name</code>、图像高度<code>height</code>、图像宽度<code>width</code>以及图像唯一索引<code>id</code>。</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="string">&quot;images&quot;</span>: [</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="string">&quot;license&quot;</span>: <span class="number">4</span>,</span><br><span class="line">        <span class="string">&quot;file_name&quot;</span>: <span class="string">&quot;000000397133.jpg&quot;</span>,</span><br><span class="line">        <span class="string">&quot;coco_url&quot;</span>: <span class="string">&quot;http://images.cocodataset.org/val2017/000000397133.jpg&quot;</span>,</span><br><span class="line">        <span class="string">&quot;height&quot;</span>: <span class="number">427</span>,</span><br><span class="line">        <span class="string">&quot;width&quot;</span>: <span class="number">640</span>,</span><br><span class="line">        <span class="string">&quot;date_captured&quot;</span>: <span class="string">&quot;2013-11-14 17:02:52&quot;</span>,</span><br><span class="line">        <span class="string">&quot;flickr_url&quot;</span>: <span class="string">&quot;http://farm7.staticflickr.com/6116/6255196340_da26cf2c9e_z.jpg&quot;</span>,</span><br><span class="line">        <span class="string">&quot;id&quot;</span>: <span class="number">397133</span></span><br><span class="line">    &#125;,</span><br><span class="line">    <span class="comment"># ......</span></span><br><span class="line">]</span><br></pre></td></tr></table></figure>
+
+<p><code>annotations</code>也是一个列表，提供数据集中图像对应的标签信息，列表中每一项是一个字典，对应于一个标签。字典中的键分别为：</p>
+<ul>
+<li><code>segmentation</code>：<strong>以多边形顶点形式存储</strong>的分割实例掩膜，值是二维列表</li>
+<li><code>area</code>：实例掩膜区域的面积</li>
+<li><code>image_id</code>：该标签对应的图像索引号，该索引对应于<code>images</code>项中的<code>id</code></li>
+<li><code>bbox</code>：实例对应的边界框，是一个以<code>xywh</code>形式存储的列表，四个值分别表示边界框左上角<code>W</code>方向和<code>H</code>方向坐标、边界框宽度和高度</li>
+<li><code>category_id</code>：该标签对应的类别索引号，该索引号对应于<code>categories</code>项中的<code>id</code></li>
+<li><code>id</code>：该标签的唯一索引</li>
+</ul>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="string">&quot;annotations&quot;</span>: [</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="string">&quot;segmentation&quot;</span>: [[<span class="number">363.0</span>,<span class="number">213.11</span>,<span class="number">561.69</span>,<span class="number">164.4</span>,<span class="number">640.0</span>,<span class="number">142.43</span>,<span class="number">640.0</span>,<span class="number">301.0</span>,<span class="number">356.31</span>,<span class="number">240.82</span>]],</span><br><span class="line">        <span class="string">&quot;area&quot;</span>: <span class="number">25818.402449999994</span>,</span><br><span class="line">        <span class="string">&quot;iscrowd&quot;</span>: <span class="number">0</span>,</span><br><span class="line">        <span class="string">&quot;image_id&quot;</span>: <span class="number">25181</span>,</span><br><span class="line">        <span class="string">&quot;bbox&quot;</span>: [<span class="number">356.31</span>,<span class="number">142.43</span>,<span class="number">283.69</span>,<span class="number">158.57</span>],</span><br><span class="line">        <span class="string">&quot;category_id&quot;</span>: <span class="number">7</span>,</span><br><span class="line">        <span class="string">&quot;id&quot;</span>: <span class="number">173761</span></span><br><span class="line">    &#125;,</span><br><span class="line">]</span><br></pre></td></tr></table></figure>
+
+<h2 id="id，id，id……"><a href="#id，id，id……" class="headerlink" title="id，id，id……"></a>id，id，id……</h2><p>在COCO标签中，<code>categories</code>项、<code>images</code>项和<code>annotations</code>项中都有名为<code>id</code>的键，此外还有<code>image_id</code>和<code>category_id</code>,初看很容易搞混。然而区分这几个<code>id</code>的不同对于理解COCO标签非常必要，上边其实已经说过了，这里再放在一起集中说一下。</p>
+<p>首先，每一项中的<code>id</code>都相当于“身份证”，是一个内容（类别、图像或标签）的唯一标识，给一个<code>id</code>就能找到对应的内容。如在<code>categories</code>中就是类别的唯一标识、在<code>images</code>中就是图像的唯一索引、在<code>annotations</code>中就是标签的唯一索引。</p>
+<p>其次，<code>image_id</code>和<code>category_id</code>仅在<code>annotations</code>中出现，<code>image_id</code>标识出这个标签是哪张图像的标签，<code>category_id</code>则标识出这个标签对应于哪个类别。</p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://example.com/2022/07/31/coco-dataset-label-1/" data-id="clufcjlqc00067o15biib65jt" data-title="深入探究COCO数据集（一）" class="article-share-link"><span class="fa fa-share">Share</span></a>
+      
+      
+      
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/%E6%95%B0%E6%8D%AE%E9%9B%86/" rel="tag">数据集</a></li></ul>
+
+    </footer>
+  </div>
+  
+</article>
+
+
+
+  
+    <article id="post-python-import-method" class="h-entry article article-type-post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
+  <div class="article-meta">
+    <a href="/2022/07/23/python-import-method/" class="article-date">
+  <time class="dt-published" datetime="2022-07-23T13:05:30.000Z" itemprop="datePublished">2022-07-23</time>
+</a>
+    
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/%E7%BC%96%E7%A8%8B%E8%AF%AD%E8%A8%80/">编程语言</a>
+  </div>
+
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="p-name article-title" href="/2022/07/23/python-import-method/">python import导入</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="e-content article-entry" itemprop="articleBody">
+      
+        <p>本文假设读者已理解<code>sys_path</code>变量和<code>__name__</code>属性，如有不清楚的地方，可以参考旧文：</p>
+<blockquote>
+<p><code>sys_path</code>变量： <a target="_blank" rel="noopener" href="http://180.76.133.254/index.php/2022/07/03/python_sys_module/">python中sys模块必备知识</a></p>
+<p><code>__name__</code>属性：<a target="_blank" rel="noopener" href="http://180.76.133.254/index.php/2022/07/17/python_module_attribute/">python中必备模块属性详解</a></p>
+</blockquote>
+<p>python提供了两种导入模块和包的方法，分别是绝对导入和相对导入。绝对导入是指以<code>sys.path</code>中的路径作为基本路径，从这里开始搜索模块并导入，相对路径是指从当前模块出发，根据其他模块的相对路径关系导入。</p>
+<h3 id="绝对导入"><a href="#绝对导入" class="headerlink" title="绝对导入"></a>绝对导入</h3><p>我们平时导入python中自带的库（如<code>os</code>、<code>math</code>等）使用的都是绝对导入。与相对导入比起来，绝对导入的适用范围更广。比如说，在python主程序（<code>__name__</code>为<code>__main__</code>的模块）中不能使用相对导入，只能使用绝对导入，否则将会报错<code>ValueError: Attempted relative import in non-package</code>。</p>
+<p>导入方法：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> &lt;something&gt;</span><br><span class="line"><span class="keyword">from</span> &lt;where&gt; <span class="keyword">import</span> &lt;something&gt;</span><br><span class="line"><span class="comment"># e.g.</span></span><br><span class="line"><span class="keyword">from</span> folder1.file1 <span class="keyword">import</span> func1</span><br></pre></td></tr></table></figure>
+
+<h3 id="相对导入"><a href="#相对导入" class="headerlink" title="相对导入"></a>相对导入</h3><p>相对导入使用前缀点号，与linux的相对命令一样， 一个<code>.</code>表示相对导入从当前目录开始， 两个或更多<code>.</code>表示对当前目录的上级目录的相对导入，第一个点号之后的每个点号代表上一级。</p>
+<p>导入方法是：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">from</span> &lt;where&gt; <span class="keyword">import</span> &lt;somethings&gt;</span><br><span class="line"><span class="comment"># e.g.</span></span><br><span class="line"><span class="keyword">from</span> . <span class="keyword">import</span> function1</span><br><span class="line"><span class="keyword">from</span> ..folder.file <span class="keyword">import</span> class1</span><br></pre></td></tr></table></figure>
+
+<p>相对于绝对导入，相对导入不能使用<code>import &lt;something&gt;</code>的形式，因为<code>import &lt;something&gt;</code>要求<code>something</code>是python表达式，而如<code>.module</code>并不符合这一要求，直接运行的话解释器会将其当作错误语法处理。</p>
+<h3 id="导入方式"><a href="#导入方式" class="headerlink" title="导入方式"></a>导入方式</h3><p>在比较大的项目代码中，进行导入建议分两步处理：</p>
+<ol>
+<li>确保在运行时项目的根目录存在于<code>sys.path</code>中；</li>
+<li>在项目的不同模块包之间使用绝对导入，而在同一个包内部可以更方便的使用相对导入（当然，主程序除外）。</li>
+</ol>
+<p>举个例子，存在如下项目：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"># /home/ven/project</span><br><span class="line">project</span><br><span class="line">├──folder1</span><br><span class="line">│   └──file1.py</span><br><span class="line">├──folder2</span><br><span class="line">   ├──file2.py</span><br><span class="line">│   └──file3.py</span><br><span class="line">└──file4.py</span><br></pre></td></tr></table></figure>
+
+<h4 id="情形1"><a href="#情形1" class="headerlink" title="情形1"></a>情形1</h4><p>首先从一个简单的情况开始，我们将<code>file4.py</code>作为主程序。</p>
+<p><code>file4.py</code>直接处于项目的根目录下，旧文 <a target="_blank" rel="noopener" href="http://180.76.133.254/index.php/2022/07/03/python_sys_module/">python中sys模块必备知识</a>提到过，在运行时解释器会自动把主程序所在的目录加入<code>sys.path</code>中，在这里恰好将项目的根目录<code>/home/ven/project</code>加了进去。若要导入其他项目模块，直接使用绝对导入即可（主程序不能使用相对路径，还记得吧？）。比如若要调用<code>file1.py</code>中的<code>func1</code>、<code>file2.py</code>中的<code>func2</code>。那么导入方式如下：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># file4.py</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">from</span> folder1.file1 <span class="keyword">import</span> func1</span><br><span class="line"><span class="keyword">from</span> folder2.file2 <span class="keyword">import</span> func2</span><br></pre></td></tr></table></figure>
+
+<p>同时如果<code>file2.py</code>中需要调用<code>file3.py</code>中的<code>func3</code>的话，如何导入呢？这时候绝对导入和相对导入都可以，通常相对导入更简便和规范：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># file2.py</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 绝对导入，从/home/ven/project开始</span></span><br><span class="line"><span class="keyword">from</span> folder2.file3 <span class="keyword">import</span> func3</span><br><span class="line"><span class="comment"># 相对导入（推荐），从当前位置开始</span></span><br><span class="line"><span class="keyword">from</span> .file3 <span class="keyword">import</span> func3</span><br></pre></td></tr></table></figure>
+
+<p>更进一步的，如果<code>file2.py</code>中需要调用<code>file1.py</code>中的<code>func1_1</code>的话，相对导入和绝对导入也都可以，这时绝对导入更为推荐：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># file2.py</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 绝对导入（推荐）</span></span><br><span class="line"><span class="keyword">from</span> folder1.file1 <span class="keyword">import</span> func1_1</span><br><span class="line"><span class="comment"># 相对导入</span></span><br><span class="line"><span class="keyword">from</span> ..folder1.file1 <span class="keyword">import</span> func1_1</span><br></pre></td></tr></table></figure>
+
+<h4 id="情形2"><a href="#情形2" class="headerlink" title="情形2"></a>情形2</h4><p>现在考虑一个复杂一点的情况，如果我们的主程序不是<code>file4.py</code>而是<code>file2.py</code>怎么办呢？</p>
+<p>开始运行时解释器会自动将<code>file2.py</code>所在目录<code>/home/ven/project/folder2</code>加入<code>sys.path</code>中，而这个目录并不是根目录。这时候就需要手动将根目录加到<code>sys.path</code>中，旧文 <a target="_blank" rel="noopener" href="http://180.76.133.254/index.php/2022/07/03/python_sys_module/">python中sys模块必备知识</a>提供了一个简单粗暴的方法：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># file2.py</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> sys</span><br><span class="line">sys.path.append(<span class="string">&#x27;/home/ven/project&#x27;</span>)</span><br></pre></td></tr></table></figure>
+
+<p>这当然是正确的，只是不够严谨。假如说这个项目后来被移动到了另一路径<code>/home/ven/big_project/project</code>下，那么项目将无法正常运行，因为仍然会去<code>/home/ven/project</code>下找模块。</p>
+<p>那么有没有更好的添加根目录的方法呢？当然有，这里提供两种：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># file2.py</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 第一种（推荐）</span></span><br><span class="line"><span class="keyword">import</span> os</span><br><span class="line">this_dir = os.path.dirname(__file__)</span><br><span class="line">sys.path.append(os.path.dirname(this_dir))</span><br><span class="line"><span class="comment"># 第二种</span></span><br><span class="line">sys.path.append(<span class="string">&#x27;../&#x27;</span>)</span><br></pre></td></tr></table></figure>
+
+<p>第一种方法借助<code>__file__</code>属性（参考旧文：<a target="_blank" rel="noopener" href="http://180.76.133.254/index.php/2022/07/17/python_module_attribute/">python中必备模块属性详解</a>）将根目录的绝对路径加进<code>sys.path</code>中，第二种则是通过在<code>sys.path</code>加入相对路径使得解释器能够找到根目录（注意这里的相对路径和绝对路径与相对导入和绝对导入是不同的概念）。</p>
+<hr>
+<p>掌握python的导入规则对于写大型项目来说是一项基础而重要的技能，否则项目运行中将难免出现各种奇奇怪怪的导入报错，占用大量的时间和精力。本文对python导入规则做了一遍记录和梳理，希望能有助于读者理清相关的知识。</p>
+<p>另外，为了方便起见，本文中举的例子都没有建立<code>__init__.py</code>（这在实际项目中可不是好的习惯），所以仅使用“目录”而非“包”的叫法。</p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://example.com/2022/07/23/python-import-method/" data-id="clufcjlqh000f7o155z895e2b" data-title="python import导入" class="article-share-link"><span class="fa fa-share">Share</span></a>
+      
+      
+      
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/python/" rel="tag">python</a></li></ul>
+
+    </footer>
+  </div>
+  
+</article>
+
+
+
+  
+    <article id="post-python-module-attribute" class="h-entry article article-type-post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
+  <div class="article-meta">
+    <a href="/2022/07/17/python-module-attribute/" class="article-date">
+  <time class="dt-published" datetime="2022-07-17T11:55:17.000Z" itemprop="datePublished">2022-07-17</time>
+</a>
+    
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/%E7%BC%96%E7%A8%8B%E8%AF%AD%E8%A8%80/">编程语言</a>
+  </div>
+
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="p-name article-title" href="/2022/07/17/python-module-attribute/">python中必备模块属性详解</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="e-content article-entry" itemprop="articleBody">
+      
+        <p>在python中，每个模块(或脚本)都是可以独立运行的，为了区分不同的模块，每个模块都有对应的系统变量，这些系统变量都以前后加双下划线的形式命令，如<code>__doc__</code>、<code>__file__</code>、<code>__name__</code>等。本文将列出几个常用的模块属性。</p>
+<h3 id="name"><a href="#name" class="headerlink" title="__name__"></a>__name__</h3><p><code>__name__</code>是用于标识模块名字的系统变量。</p>
+<p>首先将主程序定义为被直接运行的模块，在主程序中变量<code>__name__</code>的值是<code>__main__</code>，在被导入的模块中，变量<code>__name__</code>的值是被导入模块的名字(不含<code>.py</code>后缀)，如<code>file1</code>。</p>
+<p><code>__name__</code>可以告诉解释器模块是作为程序直接运行还是被导入其他程序中使用，如果模块中有一部分代码，我们希望只在模块作为主程序运行时才被执行，那么<code>__name__</code>将非常有用。</p>
+<p>举例来说，模块<code>file1.py</code>内容如下：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># file1.py</span></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">function</span>():</span><br><span class="line">    <span class="keyword">pass</span></span><br><span class="line"><span class="built_in">print</span>(<span class="string">&#x27;file1 is called!&#x27;</span>)</span><br><span class="line"><span class="keyword">if</span> __name__ == <span class="string">&#x27;__main__&#x27;</span>:</span><br><span class="line">    <span class="built_in">print</span>(<span class="string">&#x27;file1 is the main program!&#x27;</span>)</span><br></pre></td></tr></table></figure>
+
+<p>模块<code>file2.py</code>内容为：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># file2.py</span></span><br><span class="line"><span class="keyword">import</span> file1</span><br><span class="line"><span class="built_in">print</span>(<span class="string">&#x27;file2 is called!&#x27;</span>)</span><br></pre></td></tr></table></figure>
+
+<p>那么只有在直接运行<code>file1.py</code>时才会输出<code>file1 is the main program!</code>。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">$ python file2.py</span><br><span class="line">file1 is called!</span><br><span class="line">file2 is called!</span><br><span class="line">$ python file1.py</span><br><span class="line">file1 is called!</span><br><span class="line">file1 is the main program！</span><br></pre></td></tr></table></figure>
+
+<p><code>__name__</code>常用于在模块中增加测试代码。</p>
+<h3 id="file"><a href="#file" class="headerlink" title="__file__"></a>__file__</h3><p><code>__file__</code>属性记录模块的绝对路径，这在需要获取模块路径的时候非常常用：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&gt;&gt;&gt; </span><span class="keyword">import</span> file1</span><br><span class="line"><span class="meta">&gt;&gt;&gt; </span>file1.__file__</span><br><span class="line">/home/ven/file1.py</span><br></pre></td></tr></table></figure>
+
+<h3 id="all"><a href="#all" class="headerlink" title="__all__"></a>__all__</h3><p><code>__all__</code>定义了模块的公有接口，决定了当使用<code>from &lt;module&gt; import *</code>时哪些内容会被导入。需要注意的是<code>__all__</code>对于<code>from &lt;module&gt; import &lt;member&gt;</code>并没有影响。</p>
+<p>依然是以<code>file.py</code>为例，内容为：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># file1.py</span></span><br><span class="line">a = <span class="number">1</span></span><br><span class="line">b = <span class="number">2</span></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">func</span>():</span><br><span class="line">    <span class="keyword">pass</span></span><br><span class="line">__all__ = [<span class="string">&#x27;a&#x27;</span>, <span class="string">&#x27;func&#x27;</span>]</span><br></pre></td></tr></table></figure>
+
+<p>那么在使用<code>from file1 import *</code>时变量<code>b</code>将不会被导入：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&gt;&gt;&gt; </span><span class="keyword">from</span> file1 <span class="keyword">import</span> *</span><br><span class="line"><span class="meta">&gt;&gt;&gt; </span>a</span><br><span class="line"><span class="number">1</span></span><br><span class="line"><span class="meta">&gt;&gt;&gt; </span>b</span><br><span class="line">Traceback (most recent call last):</span><br><span class="line">  File <span class="string">&quot;&lt;pyshell#15&gt;&quot;</span>, line <span class="number">1</span>, <span class="keyword">in</span> &lt;module&gt;</span><br><span class="line">    b</span><br><span class="line">NameError: name <span class="string">&#x27;b&#x27;</span> <span class="keyword">is</span> <span class="keyword">not</span> defined</span><br></pre></td></tr></table></figure>
+
+<p>但是如果我们使用其他方法导入<code>file1.py</code>，<code>b</code>的导入将不受影响：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&gt;&gt;&gt; </span><span class="keyword">import</span> file1  <span class="comment"># fine</span></span><br><span class="line"><span class="meta">&gt;&gt;&gt; </span>file1.b</span><br><span class="line"><span class="number">2</span></span><br><span class="line"><span class="meta">&gt;&gt;&gt; </span><span class="keyword">from</span> file1 <span class="keyword">import</span> b  <span class="comment"># fine</span></span><br></pre></td></tr></table></figure>
+
+<p>然而，我们通常不鼓励使用<code>import *</code> 的形式，而一旦使用这种导入形式，那么为了防止因全部导入导致程序混乱，使用<code>__all__</code>管理公有接口是很有必要的。</p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://example.com/2022/07/17/python-module-attribute/" data-id="clufcjlqj000k7o157gur01dc" data-title="python中必备模块属性详解" class="article-share-link"><span class="fa fa-share">Share</span></a>
+      
+      
+      
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/python/" rel="tag">python</a></li></ul>
+
+    </footer>
+  </div>
+  
+</article>
+
+
+
+  
+    <article id="post-python-sys-module" class="h-entry article article-type-post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
+  <div class="article-meta">
+    <a href="/2022/07/03/python-sys-module/" class="article-date">
+  <time class="dt-published" datetime="2022-07-03T08:11:06.000Z" itemprop="datePublished">2022-07-03</time>
+</a>
+    
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/%E7%BC%96%E7%A8%8B%E8%AF%AD%E8%A8%80/">编程语言</a>
+  </div>
+
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="p-name article-title" href="/2022/07/03/python-sys-module/">python中sys模块必备知识</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="e-content article-entry" itemprop="articleBody">
+      
+        <p>官方解释：<a target="_blank" rel="noopener" href="https://docs.python.org/3/library/sys.html">https://docs.python.org/3/library/sys.html</a></p>
+<p>顾名思义，<code>sys</code>模块是python中比较底层的库，它提供了一系列与python解释器交互的接口。在大多数情况下我们并不会显式的用到这个模块，但是实际上每个程序的运行都离不开这个模块，了解这个模块做了什么有助于我们理解代码的运行逻辑和规避掉一些潜在的问题。本文将就<code>sys</code>模块几个常用接口的用法做详细介绍。</p>
+<h2 id="必备知识——sys-path"><a href="#必备知识——sys-path" class="headerlink" title="必备知识——sys.path"></a>必备知识——sys.path</h2><p>在写python项目时，通常会涉及到模块之间的导入，对于比较大的项目来说，经常出现找不到要导入的模块或者导入的方法错误之类的问题。要解决这些问题其实都离不开<code>sys.path</code>，个人认为，每一个使用python的人都应该对<code>sys.path</code>有清晰的理解。</p>
+<p>首先从一个问题开始，现在可以想一想，下边这句话python解释器是怎么找到<code>file_b.py</code>的呢？</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">from file_b import function_1</span><br></pre></td></tr></table></figure>
+
+<p>实际上这就是<code>sys.path</code>的作用所在，它是一个指定了模块搜索路径的<strong>字符串列表</strong>（没错，它不是什么高深莫测的东西，仅仅是一个列表），列表中的每一个字符串都是一个路径，这些路径告诉解释器import的模块要去哪里找，默认是环境变量中的路径。实际使用中我们可以根据项目修改其内容以指定要搜索的路径。</p>
+<p><code>sys.path</code>在程序启动时被初始化， 简单理解的话可以认为此时的<code>sys.path</code>包含两部分内容，第一部分是调用解释器的脚本的路径，运行哪个脚本就把哪个脚本的目录插入<code>sys.path</code>的开头；第二部分是环境变量中的路径。</p>
+<p>第二部分没什么好说的，这里举例论证第一部分的路径。如我在<code>sys_module_demo</code>目录下创建模块<code>file1.py</code>，内容为：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">import sys</span><br><span class="line">print(&#x27;sys.path[0] ==&gt; &#x27;, sys.path[0])</span><br></pre></td></tr></table></figure>
+
+<p>保存后运行以下命令：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">python sys_module_demo/file1.py</span><br></pre></td></tr></table></figure>
+
+<p>那么程序将打印出<code>sys_module_demo</code>目录的绝对路径，比如我的输出是<code>sys.path[0] ==&gt; /home/ven/sys_module_demo</code>。这个路径就是第一部分的路径，其被添加到<code>sys.path</code>中后，同在这个路径下的模块就也被解释器“找到”了。</p>
+<h3 id="一个例子"><a href="#一个例子" class="headerlink" title="一个例子"></a>一个例子</h3><p>上边我们以单个文件的运行举例，实际上在这种情况下，我们完全不必关注<code>sys.path</code>，因为不涉及到自定义模块之间的相互调用。<code>sys.path</code>最大的作用体现在处理多个处于不同路径下的模块之间的调用问题上，下边将举例说明。</p>
+<p>假如说存在如下项目路径：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">project</span><br><span class="line">├──workwpace</span><br><span class="line">│   └──file1.py</span><br><span class="line">└──file2.py</span><br></pre></td></tr></table></figure>
+
+<p>如果要在<code>file1.py</code>中导入<code>file2.py</code>应该怎么办呢？换句话说<code>file1.py</code>怎么才能知道去哪里找到<code>file2.py</code>呢？</p>
+<p>这时候就需要请<code>sys.path</code>出场了，只需要手动地将<code>file2.py</code>的目录加进<code>sys.path</code>中就万事大吉了，两个文件的内容分别如下：</p>
+<p><code>file1.py</code>内容:</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> sys</span><br><span class="line">sys.path.append(<span class="string">&#x27;/home/ven/project&#x27;</span>)</span><br><span class="line"><span class="comment"># or relative path</span></span><br><span class="line"><span class="comment"># sys.path.append(&#x27;../&#x27;)</span></span><br><span class="line"><span class="keyword">import</span> file2</span><br><span class="line"></span><br><span class="line"><span class="built_in">print</span>(<span class="string">&#x27;file1 invoked!&#x27;</span>)</span><br></pre></td></tr></table></figure>
+
+<p><code>file2.py</code>内容:</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">print(&#x27;file2 invoked!&#x27;)</span><br></pre></td></tr></table></figure>
+
+<p>此时运行<code>file1.py</code>程序将正常运行并输出：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">file2 invoked!</span><br><span class="line">file1 invoked!</span><br></pre></td></tr></table></figure>
+
+<h3 id="然而…"><a href="#然而…" class="headerlink" title="然而…"></a>然而…</h3><p>在大型的项目中使用<code>sys.path</code>有用且必要，但是频繁地在<code>sys.path</code>中添加路径并不是个好习惯，最好的方法是只把项目的根路径添加到<code>sys.path</code>中。</p>
+<h2 id="进阶知识"><a href="#进阶知识" class="headerlink" title="进阶知识"></a>进阶知识</h2><p><code>sys</code>还提供了一系列与系统交互的功能，在面对一些特定需求时这些功能将非常有用，这里简单记录两个功能。</p>
+<h3 id="获取python版本——sys-version"><a href="#获取python版本——sys-version" class="headerlink" title="获取python版本——sys.version"></a>获取python版本——sys.version</h3><p>如果不确定程序要运行在哪个版本的python上，而又想用某些版本特有的语法，那么这个接口就是个非常不错的工具，我们可以尝试一下：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">&gt;&gt;&gt; sys.version</span><br><span class="line">&#x27;3.6.2 (v3.6.2:5fd33b5, Jul  8 2017, 04:57:36) [MSC v.1900 64 bit (AMD64)]&#x27;</span><br></pre></td></tr></table></figure>
+
+<p>可见我的python版本是3.6。</p>
+<p>然而在实际使用中我们更经常用另一个接口<code>sys.version_info</code>来获取版本信息，至于原因我们用一下就知道了：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">&gt;&gt;&gt; sys.version_info</span><br><span class="line">sys.version_info(major=3, minor=6, micro=2, releaselevel=&#x27;final&#x27;, serial=0)</span><br></pre></td></tr></table></figure>
+
+<p><code>sys.version_info</code>把版本信息更精细的整理出来了，而不是像<code>sys.version</code>那样单纯甩给我们一个字符串，这样的输出在程序中非常友好。</p>
+<p>假如说我在python2中开发，习惯于将<code>print</code>作为关键字使用，可是如果别人拿走我的程序在python3中运行那不就报错了吗？解决方法就是用<code>sys.version_info</code>：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">if sys.version_info &lt;= (3,0):</span><br><span class="line">    print &#x27;this is python3!&#x27;</span><br><span class="line">else:</span><br><span class="line">    print(&#x27;this is python2!&#x27;)</span><br></pre></td></tr></table></figure>
+
+<h3 id="处理命令行参数——sys-argv"><a href="#处理命令行参数——sys-argv" class="headerlink" title="处理命令行参数——sys.argv"></a>处理命令行参数——sys.argv</h3><p>在这一点上<code>sys.argv</code>类似于shell编程中的命令行参数，即： <code>sys.argv[0]</code>是运行的文件名本身 <code>sys.argv[1]</code>是第一个参数 <code>sys.argv[2]</code>是第二个参数 以此类推。需要注意的是每一个参数都会被当作<strong>字符串</strong>。</p>
+<p>建立一个文件<code>file.py</code>，内容为：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> sys</span><br><span class="line"><span class="built_in">print</span>(<span class="string">&#x27;file name: &#x27;</span>, sys.argv[<span class="number">0</span>])</span><br><span class="line"><span class="built_in">print</span>(<span class="string">&#x27;first argument: &#x27;</span>, sys.argv[<span class="number">1</span>])</span><br><span class="line"><span class="built_in">print</span>(<span class="string">&#x27;second argument: &#x27;</span>, sys.argv[<span class="number">2</span>])</span><br><span class="line"></span><br><span class="line"><span class="comment"># string -&gt; int</span></span><br><span class="line">a, b = <span class="built_in">int</span>(sys.argv[<span class="number">1</span>]), <span class="built_in">int</span>(sys.argv[<span class="number">2</span>])</span><br><span class="line"><span class="built_in">print</span>(<span class="string">&#x27;sum of arguments: &#x27;</span>, a + b)</span><br></pre></td></tr></table></figure>
+
+<p>如下运行<code>file.py</code>：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">python file.py 2 3</span><br></pre></td></tr></table></figure>
+
+<p>将会发现输出结果为：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">file name: file.py</span><br><span class="line">first argument: 2</span><br><span class="line">second argument: 3</span><br><span class="line">sum of arguments: 5</span><br></pre></td></tr></table></figure>
+
+<p>实际上，这个功能使用的并不多，因为有更好的替代方案argparser。不过，在随手写的小程序中，<code>sys.argv</code>不失为一个小巧而高效的工具。</p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://example.com/2022/07/03/python-sys-module/" data-id="clufcjlqk000m7o15apdu94en" data-title="python中sys模块必备知识" class="article-share-link"><span class="fa fa-share">Share</span></a>
+      
+      
+      
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/python/" rel="tag">python</a></li></ul>
+
+    </footer>
+  </div>
+  
+</article>
+
+
+
+  
+
+
+  <nav id="page-nav">
+    
+    <a class="extend prev" rel="prev" href="/">&laquo; Prev</a><a class="page-number" href="/">1</a><span class="page-number current">2</span>
+  </nav>
+
+</section>
+        
+          <aside id="sidebar">
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Categories</h3>
+    <div class="widget">
+      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/%E6%A8%A1%E5%9E%8B%E7%BB%93%E6%9E%84%E8%AE%BE%E8%AE%A1/">模型结构设计</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E6%B7%B1%E5%BA%A6%E5%AD%A6%E4%B9%A0/">深度学习</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E6%B7%B1%E5%BA%A6%E5%AD%A6%E4%B9%A0%E6%A8%A1%E5%9E%8B%E9%83%A8%E7%BD%B2/">深度学习模型部署</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E7%BC%96%E7%A8%8B%E8%AF%AD%E8%A8%80/">编程语言</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tags</h3>
+    <div class="widget">
+      <ul class="tag-list" itemprop="keywords"><li class="tag-list-item"><a class="tag-list-link" href="/tags/pyTorch/" rel="tag">pyTorch</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/python/" rel="tag">python</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E6%95%B0%E6%8D%AE%E9%9B%86/" rel="tag">数据集</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E8%AE%BA%E6%96%87/" rel="tag">论文</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tag Cloud</h3>
+    <div class="widget tagcloud">
+      <a href="/tags/pyTorch/" style="font-size: 10px;">pyTorch</a> <a href="/tags/python/" style="font-size: 20px;">python</a> <a href="/tags/%E6%95%B0%E6%8D%AE%E9%9B%86/" style="font-size: 15px;">数据集</a> <a href="/tags/%E8%AE%BA%E6%96%87/" style="font-size: 10px;">论文</a>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Archives</h3>
+    <div class="widget">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2024/03/">March 2024</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/03/">March 2023</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/02/">February 2023</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/12/">December 2022</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/10/">October 2022</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/08/">August 2022</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/07/">July 2022</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Recent Posts</h3>
+    <div class="widget">
+      <ul>
+        
+          <li>
+            <a href="/2024/03/30/Config-GitHub-Pages-with-Hexo/">使用Hexo搭建GitHub博客</a>
+          </li>
+        
+          <li>
+            <a href="/2024/03/30/hello-world/">Hello World</a>
+          </li>
+        
+          <li>
+            <a href="/2023/03/05/pytorch-model-to-onnx/">pyTorch模型转onnx</a>
+          </li>
+        
+          <li>
+            <a href="/2023/03/04/pytorch-model-to-torchscript/">pyTorch模型转torchscript</a>
+          </li>
+        
+          <li>
+            <a href="/2023/02/19/python-file-lock/">python实现文件锁</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+
+  
+</aside>
+        
+      </div>
+      <footer id="footer">
+  
+  <div class="outer">
+    <div id="footer-info" class="inner">
+      
+      &copy; 2024 John Doe<br>
+      Powered by <a href="https://hexo.io/" target="_blank">Hexo</a>
+    </div>
+  </div>
+</footer>
+
+    </div>
+    <nav id="mobile-nav">
+  
+    <a href="/" class="mobile-nav-link">Home</a>
+  
+    <a href="/archives" class="mobile-nav-link">Archives</a>
+  
+</nav>
+    
+
+
+<script src="/js/jquery-3.6.4.min.js"></script>
+
+
+
+  
+<script src="/fancybox/jquery.fancybox.min.js"></script>
+
+
+
+
+<script src="/js/script.js"></script>
+
+
+
+
+
+  </div>
+</body>
+</html>

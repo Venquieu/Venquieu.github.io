@@ -6,15 +6,15 @@
   
   <title>pyTorch模型转onnx | Hexo</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-  <meta name="description" content="pyTorch模型转换为onnx格式相对来说是比较简单的，因为pyTorch提供了torch.onnx模块用于实现这一转换过程。 基本实现将pyTorch模型转换为onnx格式的基本流程和转换为TorchScript格式是一样的，这是因为无论转换为TorchScript还是onnx都需要对torch.nn.Module进行tracing操作以记录模型所有的运算。 torch.onnx.export">
+  <meta name="description" content="pyTorch模型转换为onnx格式相对来说是比较简单的，因为pyTorch提供了torch.onnx模块用于实现这一转换过程。 基本实现 将pyTorch模型转换为onnx格式的基本流程和转换为TorchScript格式是一样的，这是因为无论转换为TorchScript还是onnx都需要对torch.nn.Module进行tracing操作以记录模型所有的运算。 torch.onnx.ex">
 <meta property="og:type" content="article">
 <meta property="og:title" content="pyTorch模型转onnx">
 <meta property="og:url" content="http://example.com/2023/03/05/pytorch-model-to-onnx/index.html">
 <meta property="og:site_name" content="Hexo">
-<meta property="og:description" content="pyTorch模型转换为onnx格式相对来说是比较简单的，因为pyTorch提供了torch.onnx模块用于实现这一转换过程。 基本实现将pyTorch模型转换为onnx格式的基本流程和转换为TorchScript格式是一样的，这是因为无论转换为TorchScript还是onnx都需要对torch.nn.Module进行tracing操作以记录模型所有的运算。 torch.onnx.export">
+<meta property="og:description" content="pyTorch模型转换为onnx格式相对来说是比较简单的，因为pyTorch提供了torch.onnx模块用于实现这一转换过程。 基本实现 将pyTorch模型转换为onnx格式的基本流程和转换为TorchScript格式是一样的，这是因为无论转换为TorchScript还是onnx都需要对torch.nn.Module进行tracing操作以记录模型所有的运算。 torch.onnx.ex">
 <meta property="og:locale" content="en_US">
 <meta property="article:published_time" content="2023-03-05T08:53:53.000Z">
-<meta property="article:modified_time" content="2024-03-31T09:44:19.412Z">
+<meta property="article:modified_time" content="2024-04-01T01:30:54.471Z">
 <meta property="article:author" content="John Doe">
 <meta name="twitter:card" content="summary">
   
@@ -33,7 +33,119 @@
 
   
   
-<meta name="generator" content="Hexo 7.1.1"></head>
+<meta name="generator" content="Hexo 7.1.1"><style>mjx-container[jax="SVG"] {
+  direction: ltr;
+}
+
+mjx-container[jax="SVG"] > svg {
+  overflow: visible;
+}
+
+mjx-container[jax="SVG"][display="true"] {
+  display: block;
+  text-align: center;
+  margin: 1em 0;
+}
+
+mjx-container[jax="SVG"][justify="left"] {
+  text-align: left;
+}
+
+mjx-container[jax="SVG"][justify="right"] {
+  text-align: right;
+}
+
+g[data-mml-node="merror"] > g {
+  fill: red;
+  stroke: red;
+}
+
+g[data-mml-node="merror"] > rect[data-background] {
+  fill: yellow;
+  stroke: none;
+}
+
+g[data-mml-node="mtable"] > line[data-line] {
+  stroke-width: 70px;
+  fill: none;
+}
+
+g[data-mml-node="mtable"] > rect[data-frame] {
+  stroke-width: 70px;
+  fill: none;
+}
+
+g[data-mml-node="mtable"] > .mjx-dashed {
+  stroke-dasharray: 140;
+}
+
+g[data-mml-node="mtable"] > .mjx-dotted {
+  stroke-linecap: round;
+  stroke-dasharray: 0,140;
+}
+
+g[data-mml-node="mtable"] > svg {
+  overflow: visible;
+}
+
+[jax="SVG"] mjx-tool {
+  display: inline-block;
+  position: relative;
+  width: 0;
+  height: 0;
+}
+
+[jax="SVG"] mjx-tool > mjx-tip {
+  position: absolute;
+  top: 0;
+  left: 0;
+}
+
+mjx-tool > mjx-tip {
+  display: inline-block;
+  padding: .2em;
+  border: 1px solid #888;
+  font-size: 70%;
+  background-color: #F8F8F8;
+  color: black;
+  box-shadow: 2px 2px 5px #AAAAAA;
+}
+
+g[data-mml-node="maction"][data-toggle] {
+  cursor: pointer;
+}
+
+mjx-status {
+  display: block;
+  position: fixed;
+  left: 1em;
+  bottom: 1em;
+  min-width: 25%;
+  padding: .2em .4em;
+  border: 1px solid #888;
+  font-size: 90%;
+  background-color: #F8F8F8;
+  color: black;
+}
+
+foreignObject[data-mjx-xml] {
+  font-family: initial;
+  line-height: normal;
+  overflow: visible;
+}
+
+.MathJax path {
+  stroke-width: 3;
+}
+
+mjx-container[display="true"] {
+  overflow: auto hidden;
+}
+
+mjx-container[display="true"] + br {
+  display: none;
+}
+</style></head>
 
 <body>
   <div id="container">
@@ -98,40 +210,48 @@
     <div class="e-content article-entry" itemprop="articleBody">
       
         <p>pyTorch模型转换为onnx格式相对来说是比较简单的，因为pyTorch提供了<code>torch.onnx</code>模块用于实现这一转换过程。</p>
-<h2 id="基本实现"><a href="#基本实现" class="headerlink" title="基本实现"></a>基本实现</h2><p>将pyTorch模型转换为onnx格式的基本流程和<a target="_blank" rel="noopener" href="http://localhost/wordpress/deployment/pytorch_model_to_torchscript/" title="转换为TorchScript格式">转换为TorchScript格式</a>是一样的，这是因为无论转换为TorchScript还是onnx都需要对<code>torch.nn.Module</code>进行tracing操作以记录模型所有的运算。</p>
-<h3 id="torch-onnx-export-函数说明"><a href="#torch-onnx-export-函数说明" class="headerlink" title="torch.onnx.export 函数说明"></a>torch.onnx.export 函数说明</h3><p>两者的不同之处在于实现转换功能的函数，转换为onnx格式需要用函数<code>torch.onnx.export</code>[2]实现。函数的用法pyTorch官方有详细的介绍，不过我觉得还是有必要将重点用更简单的语言说一下。函数格式如下：</p>
+<h2 id="基本实现">基本实现</h2>
+<p>将pyTorch模型转换为onnx格式的基本流程和<a target="_blank" rel="noopener" href="http://localhost/wordpress/deployment/pytorch_model_to_torchscript/" title="转换为TorchScript格式">转换为TorchScript格式</a>是一样的，这是因为无论转换为TorchScript还是onnx都需要对<code>torch.nn.Module</code>进行tracing操作以记录模型所有的运算。</p>
+<h3 id="torch.onnx.export-函数说明">torch.onnx.export 函数说明</h3>
+<p>两者的不同之处在于实现转换功能的函数，转换为onnx格式需要用函数<code>torch.onnx.export</code>[2]实现。函数的用法pyTorch官方有详细的介绍，不过我觉得还是有必要将重点用更简单的语言说一下。函数格式如下：</p>
 <figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">torch.onnx.export(model, args, f, export_params=True, verbose=False, training=&lt;TrainingMode.EVAL: 0&gt;, \</span><br><span class="line">                  input_names=None, output_names=None, operator_export_type=&lt;OperatorExportTypes.ONNX: 0&gt;, \</span><br><span class="line">                  opset_version=None, do_constant_folding=True, dynamic_axes=None, keep_initializers_as_inputs=None, </span><br><span class="line">                  custom_opsets=None, export_modules_as_functions=False)</span><br></pre></td></tr></table></figure>
-
 <p>看起来一堆参数，但是实际上必须的参数只有三个：</p>
 <ul>
-<li><p><strong><code>model</code></strong>: 要进行转换的模型，通常是加载好权重的<code>torch.nn.Module</code>实例。 多说一句，<code>model</code>也可以是<code>torch.jit.ScriptModule</code>，实际上<code>torch.onnx.export</code>转换时处理的就是<code>torch.jit.ScriptModule</code>实例，如果输入是<code>torch.nn.Module</code>实例，那么就会首先被转换为<code>torch.jit.ScriptModule</code>。</p>
-</li>
-<li><p><strong><code>args</code></strong>: 模型<code>model</code>的输入参数，可以是元组或者<code>torch.Tensor</code>。</p>
-</li>
-<li><p><strong><code>f</code></strong>: 简单理解是导出文件的名字，此时需要是一个包含文件名的字符串。</p>
-</li>
+<li><p><strong><code>model</code></strong>:
+要进行转换的模型，通常是加载好权重的<code>torch.nn.Module</code>实例。
+多说一句，<code>model</code>也可以是<code>torch.jit.ScriptModule</code>，实际上<code>torch.onnx.export</code>转换时处理的就是<code>torch.jit.ScriptModule</code>实例，如果输入是<code>torch.nn.Module</code>实例，那么就会首先被转换为<code>torch.jit.ScriptModule</code>。</p></li>
+<li><p><strong><code>args</code></strong>:
+模型<code>model</code>的输入参数，可以是元组或者<code>torch.Tensor</code>。</p></li>
+<li><p><strong><code>f</code></strong>:
+简单理解是导出文件的名字，此时需要是一个包含文件名的字符串。</p></li>
 </ul>
 <p>除了这三个必要的参数，还有一些非常重要、常用的参数：</p>
 <ul>
-<li><strong><code>input_names</code></strong>: 运算图输入节点的名字，类型是字符串列表</li>
-<li><strong><code>output_names</code></strong> : 运算图输出节点的名字，类型是字符串列表</li>
-<li><strong><code>dynamic_axes</code></strong>: 可以控制将导出的模型设置为支持输入动态维度</li>
+<li><strong><code>input_names</code></strong>:
+运算图输入节点的名字，类型是字符串列表</li>
+<li><strong><code>output_names</code></strong> :
+运算图输出节点的名字，类型是字符串列表</li>
+<li><strong><code>dynamic_axes</code></strong>:
+可以控制将导出的模型设置为支持输入动态维度</li>
 <li><strong><code>opset_version</code></strong>: 运算集版本</li>
 </ul>
-<h3 id="torch-onnx-export-函数使用"><a href="#torch-onnx-export-函数使用" class="headerlink" title="torch.onnx.export 函数使用"></a>torch.onnx.export 函数使用</h3><p>下边通过一个简单的例子说明一下<code>torch.onnx.export</code>的用法。</p>
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line">import torch</span><br><span class="line">import torchvision</span><br><span class="line"></span><br><span class="line"># 创建模型实例，对于自定义的模型需要加载权重</span><br><span class="line">model = torchvision.models.resnet18(pretrained=True).cuda()</span><br><span class="line"></span><br><span class="line"># 评估模式</span><br><span class="line">model.eval()</span><br><span class="line"></span><br><span class="line"># 创建一个示例输出，维度和forward函数的输入一致</span><br><span class="line">dummy_input = torch.rand(1, 3, 224, 224, device=&#x27;cuda&#x27;)</span><br><span class="line"></span><br><span class="line"># 执行转换并将结果保存为`resnet18.onnx`</span><br><span class="line">torch.onnx.export(</span><br><span class="line">    model,</span><br><span class="line">    dummy_input,</span><br><span class="line">    &quot;resnet18.onnx&quot;,</span><br><span class="line">    input_names = [&quot;image&quot;],</span><br><span class="line">    output_names = [&quot;pred&quot;],</span><br><span class="line">    dynamic_axes = &#123;&quot;image&quot;: &#123;0: &quot;batch&quot;&#125;,</span><br><span class="line">                    &quot;label&quot;: &#123;0: &quot;batch&quot;&#125;&#125;,</span><br><span class="line">    opset_version=11</span><br><span class="line">)</span><br></pre></td></tr></table></figure>
-
-<p>根据我们对于这个函数的认知，我们可以知道：这段代码最后得到了一个onnx模型，名字为<code>resnet18.onnx</code>，转换用到的操作集版本是11，<code>resnet18.onnx</code>的输入节点名字是<code>image</code>、输出节点名字是<code>pred</code>,输出和输出的batch size都是动态的，但每张输入图像的维度是固定的，那就是$ 3 \times 224 \times 224 $。</p>
-<p>为了验证我们转出来的onnx模型是不是跟我们预想的一致，还可以把onnx模型上传到<a target="_blank" rel="noopener" href="https://netron.app/">https://netron.app</a> 实现可视化查看。</p>
-<h2 id="完整的转换实例脚本"><a href="#完整的转换实例脚本" class="headerlink" title="完整的转换实例脚本"></a>完整的转换实例脚本</h2><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br></pre></td><td class="code"><pre><span class="line">import argparse</span><br><span class="line">import torch</span><br><span class="line"></span><br><span class="line"># === import your model ===</span><br><span class="line">from model import MyModel</span><br><span class="line"></span><br><span class="line">parser = argparse.ArgumentParser(&quot;export model as onnx&quot;)</span><br><span class="line">parser.add_argument(&#x27;--checkpoint&#x27;, type=str, required=True)</span><br><span class="line">parser.add_argument(&quot;--batch-size&quot;, type=int, default=1)</span><br><span class="line">parser.add_argument(</span><br><span class="line">    &quot;--input-shape&quot;,</span><br><span class="line">    type=str,</span><br><span class="line">    default=&quot;224,224&quot;,</span><br><span class="line">    help=&quot;specify the input shape for inference&quot;)</span><br><span class="line">parser.add_argument(&quot;--dynamic&quot;, action=&quot;store_true&quot;, help=&quot;whether the input shape should be dynamic&quot;)</span><br><span class="line">parser.add_argument(&quot;--file-name&quot;, type=str, default=&quot;model.onnx&quot;, help=&quot;onnx file name&quot;)</span><br><span class="line">parser.add_argument(&quot;--input-name&quot;, type=str, default=&quot;image&quot;, help=&quot;name of input node&quot;)</span><br><span class="line">parser.add_argument(&quot;--output-name&quot;, type=str, default=&quot;pred&quot;,  help=&quot;name of output node&quot;)</span><br><span class="line">parser.add_argument(&quot;--opset&quot;, type=int, default=11, help=&quot;onnx opset version&quot;)</span><br><span class="line"></span><br><span class="line">args = parser.parse_args()</span><br><span class="line"></span><br><span class="line">model = MyModel().cuda()</span><br><span class="line">checkpoint = torch.load(args.checkpoint)</span><br><span class="line">model.load_state_dict(checkpoint)</span><br><span class="line"></span><br><span class="line">model.eval()</span><br><span class="line"></span><br><span class="line">input_shape = tuple(map(int, args.input_shape.split(&quot;,&quot;)))</span><br><span class="line">dummy_input = torch.randn(args.batch_size, 6, *input_shape, device=&quot;cuda&quot;)</span><br><span class="line"></span><br><span class="line">torch.onnx.export(</span><br><span class="line">    model,</span><br><span class="line">    dummy_input,</span><br><span class="line">    args.file_name,</span><br><span class="line">    input_names = [args.input_name],</span><br><span class="line">    output_names = [args.output_name],</span><br><span class="line">    dynamic_axes = &#123;args.input_name: &#123;0: &quot;batch&quot;&#125;,</span><br><span class="line">                    args.output_name: &#123;0: &quot;batch&quot;&#125;&#125; if args.dynamic else None,</span><br><span class="line">    opset_version=args.opset,</span><br><span class="line">)</span><br><span class="line"></span><br><span class="line">print(&quot;save torchscript as &quot; + args.file_name)</span><br></pre></td></tr></table></figure>
-
-<h2 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h2><p>[1]. <a target="_blank" rel="noopener" href="https://onnxruntime.ai/docs/get-started/with-python.html">https://onnxruntime.ai/docs/get-started/with-python.html</a></p>
-<p> [2]. <a target="_blank" rel="noopener" href="https://pytorch.org/docs/stable/onnx.html#functions">https://pytorch.org/docs/stable/onnx.html#functions</a></p>
+<h3 id="torch.onnx.export-函数使用">torch.onnx.export 函数使用</h3>
+<p>下边通过一个简单的例子说明一下<code>torch.onnx.export</code>的用法。</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line">import torch</span><br><span class="line">import torchvision</span><br><span class="line"></span><br><span class="line"># 创建模型实例，对于自定义的模型需要加载权重</span><br><span class="line">model = torchvision.models.resnet18(pretrained=True).cuda()</span><br><span class="line"></span><br><span class="line"># 评估模式</span><br><span class="line">model.eval()</span><br><span class="line"></span><br><span class="line"># 创建一个示例输出，维度和forward函数的输入一致</span><br><span class="line">dummy_input = torch.rand(1, 3, 224, 224, device='cuda')</span><br><span class="line"></span><br><span class="line"># 执行转换并将结果保存为`resnet18.onnx`</span><br><span class="line">torch.onnx.export(</span><br><span class="line">    model,</span><br><span class="line">    dummy_input,</span><br><span class="line">    "resnet18.onnx",</span><br><span class="line">    input_names = ["image"],</span><br><span class="line">    output_names = ["pred"],</span><br><span class="line">    dynamic_axes = {"image": {0: "batch"},</span><br><span class="line">                    "label": {0: "batch"}},</span><br><span class="line">    opset_version=11</span><br><span class="line">)</span><br></pre></td></tr></table></figure>
+<p>根据我们对于这个函数的认知，我们可以知道：这段代码最后得到了一个onnx模型，名字为<code>resnet18.onnx</code>，转换用到的操作集版本是11，<code>resnet18.onnx</code>的输入节点名字是<code>image</code>、输出节点名字是<code>pred</code>,输出和输出的batch
+size都是动态的，但每张输入图像的维度是固定的，那就是<mjx-container class="MathJax" jax="SVG"><svg style="vertical-align: -0.05ex;" xmlns="http://www.w3.org/2000/svg" width="1.131ex" height="1.554ex" role="img" focusable="false" viewBox="0 -665 500 687"><g stroke="currentColor" fill="currentColor" stroke-width="0" transform="scale(1,-1)"><g data-mml-node="math"><g data-mml-node="mn"><path data-c="33" d="M127 463Q100 463 85 480T69 524Q69 579 117 622T233 665Q268 665 277 664Q351 652 390 611T430 522Q430 470 396 421T302 350L299 348Q299 347 308 345T337 336T375 315Q457 262 457 175Q457 96 395 37T238 -22Q158 -22 100 21T42 130Q42 158 60 175T105 193Q133 193 151 175T169 130Q169 119 166 110T159 94T148 82T136 74T126 70T118 67L114 66Q165 21 238 21Q293 21 321 74Q338 107 338 175V195Q338 290 274 322Q259 328 213 329L171 330L168 332Q166 335 166 348Q166 366 174 366Q202 366 232 371Q266 376 294 413T322 525V533Q322 590 287 612Q265 626 240 626Q208 626 181 615T143 592T132 580H135Q138 579 143 578T153 573T165 566T175 555T183 540T186 520Q186 498 172 481T127 463Z"></path></g></g></g></svg></mjx-container>。</p>
+<p>为了验证我们转出来的onnx模型是不是跟我们预想的一致，还可以把onnx模型上传到https://netron.app
+实现可视化查看。</p>
+<h2 id="完整的转换实例脚本">完整的转换实例脚本</h2>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br></pre></td><td class="code"><pre><span class="line">import argparse</span><br><span class="line">import torch</span><br><span class="line"></span><br><span class="line"># === import your model ===</span><br><span class="line">from model import MyModel</span><br><span class="line"></span><br><span class="line">parser = argparse.ArgumentParser("export model as onnx")</span><br><span class="line">parser.add_argument('--checkpoint', type=str, required=True)</span><br><span class="line">parser.add_argument("--batch-size", type=int, default=1)</span><br><span class="line">parser.add_argument(</span><br><span class="line">    "--input-shape",</span><br><span class="line">    type=str,</span><br><span class="line">    default="224,224",</span><br><span class="line">    help="specify the input shape for inference")</span><br><span class="line">parser.add_argument("--dynamic", action="store_true", help="whether the input shape should be dynamic")</span><br><span class="line">parser.add_argument("--file-name", type=str, default="model.onnx", help="onnx file name")</span><br><span class="line">parser.add_argument("--input-name", type=str, default="image", help="name of input node")</span><br><span class="line">parser.add_argument("--output-name", type=str, default="pred",  help="name of output node")</span><br><span class="line">parser.add_argument("--opset", type=int, default=11, help="onnx opset version")</span><br><span class="line"></span><br><span class="line">args = parser.parse_args()</span><br><span class="line"></span><br><span class="line">model = MyModel().cuda()</span><br><span class="line">checkpoint = torch.load(args.checkpoint)</span><br><span class="line">model.load_state_dict(checkpoint)</span><br><span class="line"></span><br><span class="line">model.eval()</span><br><span class="line"></span><br><span class="line">input_shape = tuple(map(int, args.input_shape.split(",")))</span><br><span class="line">dummy_input = torch.randn(args.batch_size, 6, *input_shape, device="cuda")</span><br><span class="line"></span><br><span class="line">torch.onnx.export(</span><br><span class="line">    model,</span><br><span class="line">    dummy_input,</span><br><span class="line">    args.file_name,</span><br><span class="line">    input_names = [args.input_name],</span><br><span class="line">    output_names = [args.output_name],</span><br><span class="line">    dynamic_axes = {args.input_name: {0: "batch"},</span><br><span class="line">                    args.output_name: {0: "batch"}} if args.dynamic else None,</span><br><span class="line">    opset_version=args.opset,</span><br><span class="line">)</span><br><span class="line"></span><br><span class="line">print("save torchscript as " + args.file_name)</span><br></pre></td></tr></table></figure>
+<h2 id="参考">参考</h2>
+<p>[1]. <a target="_blank" rel="noopener" href="https://onnxruntime.ai/docs/get-started/with-python.html">https://onnxruntime.ai/docs/get-started/with-python.html</a></p>
+<p>[2]. <a target="_blank" rel="noopener" href="https://pytorch.org/docs/stable/onnx.html#functions">https://pytorch.org/docs/stable/onnx.html#functions</a></p>
 
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://example.com/2023/03/05/pytorch-model-to-onnx/" data-id="clufcjlql000s7o15gt6e2wko" data-title="pyTorch模型转onnx" class="article-share-link"><span class="fa fa-share">Share</span></a>
+      <a data-url="http://example.com/2023/03/05/pytorch-model-to-onnx/" data-id="clufj25tt000u6g152upge4ko" data-title="pyTorch模型转onnx" class="article-share-link"><span class="fa fa-share">Share</span></a>
       
       
       

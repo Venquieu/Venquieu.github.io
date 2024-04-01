@@ -6,12 +6,12 @@
   
   <title>pyTorch模型转torchscript | Hexo</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-  <meta name="description" content="作为一个高效好用的深度学习框架，pyTorch被广泛用于深度学习模型的搭建和训练，但是却几乎没有人会直接将pyTorch模型用于部署。对此，pyTorch官方也给出了自己的一种解决方案——TorchScript。 TorchScript[1]是一种从PyTorch代码创建可序列化、可优化的模型的方法，任何TorchScript程序都可以从Python进程中保存，并加载到没有Python依赖的进程中">
+  <meta name="description" content="作为一个高效好用的深度学习框架，pyTorch被广泛用于深度学习模型的搭建和训练，但是却几乎没有人会直接将pyTorch模型用于部署。对此，pyTorch官方也给出了自己的一种解决方案——TorchScript。 TorchScript[1]是一种从PyTorch代码创建可序列化、可优化的模型的方法，任何TorchScript程序都可以从Python进程中保存，并加载到没有Python依赖的进程">
 <meta property="og:type" content="article">
 <meta property="og:title" content="pyTorch模型转torchscript">
 <meta property="og:url" content="http://example.com/2023/03/04/pytorch-model-to-torchscript/index.html">
 <meta property="og:site_name" content="Hexo">
-<meta property="og:description" content="作为一个高效好用的深度学习框架，pyTorch被广泛用于深度学习模型的搭建和训练，但是却几乎没有人会直接将pyTorch模型用于部署。对此，pyTorch官方也给出了自己的一种解决方案——TorchScript。 TorchScript[1]是一种从PyTorch代码创建可序列化、可优化的模型的方法，任何TorchScript程序都可以从Python进程中保存，并加载到没有Python依赖的进程中">
+<meta property="og:description" content="作为一个高效好用的深度学习框架，pyTorch被广泛用于深度学习模型的搭建和训练，但是却几乎没有人会直接将pyTorch模型用于部署。对此，pyTorch官方也给出了自己的一种解决方案——TorchScript。 TorchScript[1]是一种从PyTorch代码创建可序列化、可优化的模型的方法，任何TorchScript程序都可以从Python进程中保存，并加载到没有Python依赖的进程">
 <meta property="og:locale" content="en_US">
 <meta property="article:published_time" content="2023-03-04T08:15:08.000Z">
 <meta property="article:modified_time" content="2024-03-31T09:44:50.078Z">
@@ -101,34 +101,38 @@
 <p>TorchScript[1]是一种从PyTorch代码创建可序列化、可优化的模型的方法，任何TorchScript程序都可以从Python进程中保存，并加载到没有Python依赖的进程中，从而可以实现模型的部署。</p>
 <p>将pyTorch模型转换成TorchScript有两种方法：一种叫tracing，另一种叫scripting。通常这两种方法任意一种都可以，但在一些特定模型结构中需要将两者结合使用。</p>
 <p>鉴于tracing对于我来说已经足够，本文只关注tracing方法。</p>
-<h2 id="tracing用法"><a href="#tracing用法" class="headerlink" title="tracing用法"></a>tracing用法</h2><p><code>tracing</code>方法的核心是用<code>torch.jit.trace</code>记录一次模型推理中经过的所有运算记录，将这些记录整合成计算图。</p>
+<h2 id="tracing用法">tracing用法</h2>
+<p><code>tracing</code>方法的核心是用<code>torch.jit.trace</code>记录一次模型推理中经过的所有运算记录，将这些记录整合成计算图。</p>
 <figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line">import torch</span><br><span class="line">import torchvision</span><br><span class="line"></span><br><span class="line"># 创建模型实例，对于自定义的模型需要加载权重</span><br><span class="line">model = torchvision.models.resnet18(pretrained=True)</span><br><span class="line"></span><br><span class="line"># 评估模式</span><br><span class="line">model.eval()</span><br><span class="line"></span><br><span class="line"># 创建一个示例输出，维度和forward函数的输入一致</span><br><span class="line">dummy_input = torch.rand(1, 3, 224, 224)</span><br><span class="line"></span><br><span class="line"># 用 torch.jit.trace 生成 torch.jit.ScriptModule</span><br><span class="line">with torch.no_grad():</span><br><span class="line">    traced_script_module = torch.jit.trace(model, dummy_input)</span><br><span class="line"></span><br><span class="line"># 保存 TorchScript，习惯上后缀为.pt</span><br><span class="line">traced_script_module.save(&quot;traced_resnet.pt&quot;)</span><br></pre></td></tr></table></figure>
-
 <p>这样即可把pyTorch模型转换成TorchScript了。</p>
-<h2 id="创建一个完整的转换脚本"><a href="#创建一个完整的转换脚本" class="headerlink" title="创建一个完整的转换脚本"></a>创建一个完整的转换脚本</h2><p>这里补充一个完整的转换脚本吧</p>
+<h2 id="创建一个完整的转换脚本">创建一个完整的转换脚本</h2>
+<p>这里补充一个完整的转换脚本吧</p>
 <figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br></pre></td><td class="code"><pre><span class="line">import argparse</span><br><span class="line">import torch</span><br><span class="line"></span><br><span class="line"># === import your model ===</span><br><span class="line">from model import MyModel</span><br><span class="line"></span><br><span class="line">parser = argparse.ArgumentParser(&quot;export model as torchscript&quot;)</span><br><span class="line">parser.add_argument(&#x27;--checkpoint&#x27;, type=str, required=True)</span><br><span class="line">parser.add_argument(&quot;--batch-size&quot;, type=int, default=1)</span><br><span class="line">parser.add_argument(</span><br><span class="line">    &quot;--input-shape&quot;,</span><br><span class="line">    type=str,</span><br><span class="line">    default=&quot;224,224&quot;,</span><br><span class="line">    help=&quot;specify the input shape for inference&quot;)</span><br><span class="line"></span><br><span class="line">args = parser.parse_args()</span><br><span class="line"></span><br><span class="line">model = MyModel()</span><br><span class="line">checkpoint = torch.load(args.checkpoint)</span><br><span class="line">model.load_state_dict(checkpoint)</span><br><span class="line"></span><br><span class="line">model.eval()</span><br><span class="line"></span><br><span class="line">input_shape = tuple(map(int, args.input_shape.split(&quot;,&quot;)))</span><br><span class="line">dummy_input = torch.randn(args.batch_size, 6, *input_shape)</span><br><span class="line"></span><br><span class="line">with torch.no_grad():</span><br><span class="line">    traced_script_module = torch.jit.trace(model, dummy_input)</span><br><span class="line"></span><br><span class="line">traced_script_module.save(&quot;model.pt&quot;)</span><br><span class="line">print(&quot;save torchscript as model.pt&quot;)</span><br></pre></td></tr></table></figure>
-
-<h2 id="TorchScript加载"><a href="#TorchScript加载" class="headerlink" title="TorchScript加载"></a>TorchScript加载</h2><p>pyTorch模型转换成TorchScript后可以很方便地用python或者C++直接加载，如在python中可直接使用<code>torch.jit.load</code>加载序列化后的模型。</p>
+<h2 id="torchscript加载">TorchScript加载</h2>
+<p>pyTorch模型转换成TorchScript后可以很方便地用python或者C++直接加载，如在python中可直接使用<code>torch.jit.load</code>加载序列化后的模型。</p>
 <p><code>torch.jit.load</code>函数原型如下：</p>
 <figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">torch.jit.load(f, map_location=None, _extra_files=None, _restore_shapes=False)</span><br></pre></td></tr></table></figure>
-
 <ul>
-<li><code>f</code>: 一个文件流对象或者模型文件名字符串，如我们的<code>model.pt</code>;</li>
-<li><code>map_location</code>: 字符串(如<code>cuda:0</code>)或<code>torch.device</code>，用于将模型映射加载到指定的设备上。 这一点很重要，因为默认情况下<code>torch.jit.load</code>会试图将模型加载到保存时所使用的设备上，如果这个设备不存在就会报错。比如保存时模型在<code>cuda:1</code>上，而我们加载时候的设备只有一张卡即<code>cuda:0</code>，那么就会出错。而通过指定<code>map_location</code>我们可以重新分配用于加载模型的设备。</li>
+<li><code>f</code>:
+一个文件流对象或者模型文件名字符串，如我们的<code>model.pt</code>;</li>
+<li><code>map_location</code>:
+字符串(如<code>cuda:0</code>)或<code>torch.device</code>，用于将模型映射加载到指定的设备上。
+这一点很重要，因为默认情况下<code>torch.jit.load</code>会试图将模型加载到保存时所使用的设备上，如果这个设备不存在就会报错。比如保存时模型在<code>cuda:1</code>上，而我们加载时候的设备只有一张卡即<code>cuda:0</code>，那么就会出错。而通过指定<code>map_location</code>我们可以重新分配用于加载模型的设备。</li>
 </ul>
 <p>加载实现：</p>
 <figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"># 使用保存时的设备加载</span><br><span class="line">model = torch.jit.load(&quot;model.pt&quot;)</span><br><span class="line"># 使用1卡加载</span><br><span class="line">model = torch.jit.load(&quot;model.pt&quot;, map_location=&quot;cuda:1&quot;)</span><br></pre></td></tr></table></figure>
-
 <p>在C++中：</p>
 <figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">auto model = torch::jit::load(&#x27;model.pt&#x27;);</span><br></pre></td></tr></table></figure>
-
-<h2 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h2><p>[1]. <a target="_blank" rel="noopener" href="https://pytorch.org/docs/master/jit.html">https://pytorch.org/docs/master/jit.html</a> </p>
-<p>[2]. <a target="_blank" rel="noopener" href="http://djl.ai/docs/pytorch/how_to_convert_your_model_to_torchscript.html">http://djl.ai/docs/pytorch/how_to_convert_your_model_to_torchscript.html</a></p>
+<h2 id="参考">参考</h2>
+<p>[1]. <a
+target="_blank" rel="noopener" href="https://pytorch.org/docs/master/jit.html">https://pytorch.org/docs/master/jit.html</a></p>
+<p>[2]. <a
+target="_blank" rel="noopener" href="http://djl.ai/docs/pytorch/how_to_convert_your_model_to_torchscript.html">http://djl.ai/docs/pytorch/how_to_convert_your_model_to_torchscript.html</a></p>
 
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://example.com/2023/03/04/pytorch-model-to-torchscript/" data-id="clufcjlqm000w7o152kap71u4" data-title="pyTorch模型转torchscript" class="article-share-link"><span class="fa fa-share">Share</span></a>
+      <a data-url="http://example.com/2023/03/04/pytorch-model-to-torchscript/" data-id="clufj25tv00116g1567j43iea" data-title="pyTorch模型转torchscript" class="article-share-link"><span class="fa fa-share">Share</span></a>
       
       
       

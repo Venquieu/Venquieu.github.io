@@ -6,12 +6,12 @@
   
   <title>python中sys模块必备知识 | Hexo</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-  <meta name="description" content="官方解释：https:&#x2F;&#x2F;docs.python.org&#x2F;3&#x2F;library&#x2F;sys.html 顾名思义，sys模块是python中比较底层的库，它提供了一系列与python解释器交互的接口。在大多数情况下我们并不会显式的用到这个模块，但是实际上每个程序的运行都离不开这个模块，了解这个模块做了什么有助于我们理解代码的运行逻辑和规避掉一些潜在的问题。本文将就sys模块几个常用接口的用法做详细介绍。">
+  <meta name="description" content="官方解释：https:&#x2F;&#x2F;docs.python.org&#x2F;3&#x2F;library&#x2F;sys.html 顾名思义，sys模块是python中比较底层的库，它提供了一系列与python解释器交互的接口。在大多数情况下我们并不会显式的用到这个模块，但是实际上每个程序的运行都离不开这个模块，了解这个模块做了什么有助于我们理解代码的运行逻辑和规避掉一些潜在的问题。本文将就sys模块几个常用接口的用法做详细介绍。">
 <meta property="og:type" content="article">
 <meta property="og:title" content="python中sys模块必备知识">
 <meta property="og:url" content="http://example.com/2022/07/03/python-sys-module/index.html">
 <meta property="og:site_name" content="Hexo">
-<meta property="og:description" content="官方解释：https:&#x2F;&#x2F;docs.python.org&#x2F;3&#x2F;library&#x2F;sys.html 顾名思义，sys模块是python中比较底层的库，它提供了一系列与python解释器交互的接口。在大多数情况下我们并不会显式的用到这个模块，但是实际上每个程序的运行都离不开这个模块，了解这个模块做了什么有助于我们理解代码的运行逻辑和规避掉一些潜在的问题。本文将就sys模块几个常用接口的用法做详细介绍。">
+<meta property="og:description" content="官方解释：https:&#x2F;&#x2F;docs.python.org&#x2F;3&#x2F;library&#x2F;sys.html 顾名思义，sys模块是python中比较底层的库，它提供了一系列与python解释器交互的接口。在大多数情况下我们并不会显式的用到这个模块，但是实际上每个程序的运行都离不开这个模块，了解这个模块做了什么有助于我们理解代码的运行逻辑和规避掉一些潜在的问题。本文将就sys模块几个常用接口的用法做详细介绍。">
 <meta property="og:locale" content="en_US">
 <meta property="article:published_time" content="2022-07-03T08:11:06.000Z">
 <meta property="article:modified_time" content="2024-03-31T09:00:58.977Z">
@@ -98,65 +98,64 @@
     
     <div class="e-content article-entry" itemprop="articleBody">
       
-        <p>官方解释：<a target="_blank" rel="noopener" href="https://docs.python.org/3/library/sys.html">https://docs.python.org/3/library/sys.html</a></p>
+        <p>官方解释：<a
+target="_blank" rel="noopener" href="https://docs.python.org/3/library/sys.html">https://docs.python.org/3/library/sys.html</a></p>
 <p>顾名思义，<code>sys</code>模块是python中比较底层的库，它提供了一系列与python解释器交互的接口。在大多数情况下我们并不会显式的用到这个模块，但是实际上每个程序的运行都离不开这个模块，了解这个模块做了什么有助于我们理解代码的运行逻辑和规避掉一些潜在的问题。本文将就<code>sys</code>模块几个常用接口的用法做详细介绍。</p>
-<h2 id="必备知识——sys-path"><a href="#必备知识——sys-path" class="headerlink" title="必备知识——sys.path"></a>必备知识——sys.path</h2><p>在写python项目时，通常会涉及到模块之间的导入，对于比较大的项目来说，经常出现找不到要导入的模块或者导入的方法错误之类的问题。要解决这些问题其实都离不开<code>sys.path</code>，个人认为，每一个使用python的人都应该对<code>sys.path</code>有清晰的理解。</p>
+<h2 id="必备知识sys.path">必备知识——sys.path</h2>
+<p>在写python项目时，通常会涉及到模块之间的导入，对于比较大的项目来说，经常出现找不到要导入的模块或者导入的方法错误之类的问题。要解决这些问题其实都离不开<code>sys.path</code>，个人认为，每一个使用python的人都应该对<code>sys.path</code>有清晰的理解。</p>
 <p>首先从一个问题开始，现在可以想一想，下边这句话python解释器是怎么找到<code>file_b.py</code>的呢？</p>
 <figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">from file_b import function_1</span><br></pre></td></tr></table></figure>
-
 <p>实际上这就是<code>sys.path</code>的作用所在，它是一个指定了模块搜索路径的<strong>字符串列表</strong>（没错，它不是什么高深莫测的东西，仅仅是一个列表），列表中的每一个字符串都是一个路径，这些路径告诉解释器import的模块要去哪里找，默认是环境变量中的路径。实际使用中我们可以根据项目修改其内容以指定要搜索的路径。</p>
-<p><code>sys.path</code>在程序启动时被初始化， 简单理解的话可以认为此时的<code>sys.path</code>包含两部分内容，第一部分是调用解释器的脚本的路径，运行哪个脚本就把哪个脚本的目录插入<code>sys.path</code>的开头；第二部分是环境变量中的路径。</p>
+<p><code>sys.path</code>在程序启动时被初始化，
+简单理解的话可以认为此时的<code>sys.path</code>包含两部分内容，第一部分是调用解释器的脚本的路径，运行哪个脚本就把哪个脚本的目录插入<code>sys.path</code>的开头；第二部分是环境变量中的路径。</p>
 <p>第二部分没什么好说的，这里举例论证第一部分的路径。如我在<code>sys_module_demo</code>目录下创建模块<code>file1.py</code>，内容为：</p>
 <figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">import sys</span><br><span class="line">print(&#x27;sys.path[0] ==&gt; &#x27;, sys.path[0])</span><br></pre></td></tr></table></figure>
-
 <p>保存后运行以下命令：</p>
 <figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">python sys_module_demo/file1.py</span><br></pre></td></tr></table></figure>
-
 <p>那么程序将打印出<code>sys_module_demo</code>目录的绝对路径，比如我的输出是<code>sys.path[0] ==&gt; /home/ven/sys_module_demo</code>。这个路径就是第一部分的路径，其被添加到<code>sys.path</code>中后，同在这个路径下的模块就也被解释器“找到”了。</p>
-<h3 id="一个例子"><a href="#一个例子" class="headerlink" title="一个例子"></a>一个例子</h3><p>上边我们以单个文件的运行举例，实际上在这种情况下，我们完全不必关注<code>sys.path</code>，因为不涉及到自定义模块之间的相互调用。<code>sys.path</code>最大的作用体现在处理多个处于不同路径下的模块之间的调用问题上，下边将举例说明。</p>
+<h3 id="一个例子">一个例子</h3>
+<p>上边我们以单个文件的运行举例，实际上在这种情况下，我们完全不必关注<code>sys.path</code>，因为不涉及到自定义模块之间的相互调用。<code>sys.path</code>最大的作用体现在处理多个处于不同路径下的模块之间的调用问题上，下边将举例说明。</p>
 <p>假如说存在如下项目路径：</p>
 <figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">project</span><br><span class="line">├──workwpace</span><br><span class="line">│   └──file1.py</span><br><span class="line">└──file2.py</span><br></pre></td></tr></table></figure>
-
 <p>如果要在<code>file1.py</code>中导入<code>file2.py</code>应该怎么办呢？换句话说<code>file1.py</code>怎么才能知道去哪里找到<code>file2.py</code>呢？</p>
 <p>这时候就需要请<code>sys.path</code>出场了，只需要手动地将<code>file2.py</code>的目录加进<code>sys.path</code>中就万事大吉了，两个文件的内容分别如下：</p>
 <p><code>file1.py</code>内容:</p>
 <figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> sys</span><br><span class="line">sys.path.append(<span class="string">&#x27;/home/ven/project&#x27;</span>)</span><br><span class="line"><span class="comment"># or relative path</span></span><br><span class="line"><span class="comment"># sys.path.append(&#x27;../&#x27;)</span></span><br><span class="line"><span class="keyword">import</span> file2</span><br><span class="line"></span><br><span class="line"><span class="built_in">print</span>(<span class="string">&#x27;file1 invoked!&#x27;</span>)</span><br></pre></td></tr></table></figure>
-
 <p><code>file2.py</code>内容:</p>
 <figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">print(&#x27;file2 invoked!&#x27;)</span><br></pre></td></tr></table></figure>
-
 <p>此时运行<code>file1.py</code>程序将正常运行并输出：</p>
 <figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">file2 invoked!</span><br><span class="line">file1 invoked!</span><br></pre></td></tr></table></figure>
-
-<h3 id="然而…"><a href="#然而…" class="headerlink" title="然而…"></a>然而…</h3><p>在大型的项目中使用<code>sys.path</code>有用且必要，但是频繁地在<code>sys.path</code>中添加路径并不是个好习惯，最好的方法是只把项目的根路径添加到<code>sys.path</code>中。</p>
-<h2 id="进阶知识"><a href="#进阶知识" class="headerlink" title="进阶知识"></a>进阶知识</h2><p><code>sys</code>还提供了一系列与系统交互的功能，在面对一些特定需求时这些功能将非常有用，这里简单记录两个功能。</p>
-<h3 id="获取python版本——sys-version"><a href="#获取python版本——sys-version" class="headerlink" title="获取python版本——sys.version"></a>获取python版本——sys.version</h3><p>如果不确定程序要运行在哪个版本的python上，而又想用某些版本特有的语法，那么这个接口就是个非常不错的工具，我们可以尝试一下：</p>
+<h3 id="然而...">然而...</h3>
+<p>在大型的项目中使用<code>sys.path</code>有用且必要，但是频繁地在<code>sys.path</code>中添加路径并不是个好习惯，最好的方法是只把项目的根路径添加到<code>sys.path</code>中。</p>
+<h2 id="进阶知识">进阶知识</h2>
+<p><code>sys</code>还提供了一系列与系统交互的功能，在面对一些特定需求时这些功能将非常有用，这里简单记录两个功能。</p>
+<h3 id="获取python版本sys.version">获取python版本——sys.version</h3>
+<p>如果不确定程序要运行在哪个版本的python上，而又想用某些版本特有的语法，那么这个接口就是个非常不错的工具，我们可以尝试一下：</p>
 <figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">&gt;&gt;&gt; sys.version</span><br><span class="line">&#x27;3.6.2 (v3.6.2:5fd33b5, Jul  8 2017, 04:57:36) [MSC v.1900 64 bit (AMD64)]&#x27;</span><br></pre></td></tr></table></figure>
-
 <p>可见我的python版本是3.6。</p>
 <p>然而在实际使用中我们更经常用另一个接口<code>sys.version_info</code>来获取版本信息，至于原因我们用一下就知道了：</p>
 <figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">&gt;&gt;&gt; sys.version_info</span><br><span class="line">sys.version_info(major=3, minor=6, micro=2, releaselevel=&#x27;final&#x27;, serial=0)</span><br></pre></td></tr></table></figure>
-
 <p><code>sys.version_info</code>把版本信息更精细的整理出来了，而不是像<code>sys.version</code>那样单纯甩给我们一个字符串，这样的输出在程序中非常友好。</p>
 <p>假如说我在python2中开发，习惯于将<code>print</code>作为关键字使用，可是如果别人拿走我的程序在python3中运行那不就报错了吗？解决方法就是用<code>sys.version_info</code>：</p>
 <figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">if sys.version_info &lt;= (3,0):</span><br><span class="line">    print &#x27;this is python3!&#x27;</span><br><span class="line">else:</span><br><span class="line">    print(&#x27;this is python2!&#x27;)</span><br></pre></td></tr></table></figure>
-
-<h3 id="处理命令行参数——sys-argv"><a href="#处理命令行参数——sys-argv" class="headerlink" title="处理命令行参数——sys.argv"></a>处理命令行参数——sys.argv</h3><p>在这一点上<code>sys.argv</code>类似于shell编程中的命令行参数，即： <code>sys.argv[0]</code>是运行的文件名本身 <code>sys.argv[1]</code>是第一个参数 <code>sys.argv[2]</code>是第二个参数 以此类推。需要注意的是每一个参数都会被当作<strong>字符串</strong>。</p>
+<h3 id="处理命令行参数sys.argv">处理命令行参数——sys.argv</h3>
+<p>在这一点上<code>sys.argv</code>类似于shell编程中的命令行参数，即：
+<code>sys.argv[0]</code>是运行的文件名本身
+<code>sys.argv[1]</code>是第一个参数
+<code>sys.argv[2]</code>是第二个参数
+以此类推。需要注意的是每一个参数都会被当作<strong>字符串</strong>。</p>
 <p>建立一个文件<code>file.py</code>，内容为：</p>
 <figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> sys</span><br><span class="line"><span class="built_in">print</span>(<span class="string">&#x27;file name: &#x27;</span>, sys.argv[<span class="number">0</span>])</span><br><span class="line"><span class="built_in">print</span>(<span class="string">&#x27;first argument: &#x27;</span>, sys.argv[<span class="number">1</span>])</span><br><span class="line"><span class="built_in">print</span>(<span class="string">&#x27;second argument: &#x27;</span>, sys.argv[<span class="number">2</span>])</span><br><span class="line"></span><br><span class="line"><span class="comment"># string -&gt; int</span></span><br><span class="line">a, b = <span class="built_in">int</span>(sys.argv[<span class="number">1</span>]), <span class="built_in">int</span>(sys.argv[<span class="number">2</span>])</span><br><span class="line"><span class="built_in">print</span>(<span class="string">&#x27;sum of arguments: &#x27;</span>, a + b)</span><br></pre></td></tr></table></figure>
-
 <p>如下运行<code>file.py</code>：</p>
 <figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">python file.py 2 3</span><br></pre></td></tr></table></figure>
-
 <p>将会发现输出结果为：</p>
 <figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">file name: file.py</span><br><span class="line">first argument: 2</span><br><span class="line">second argument: 3</span><br><span class="line">sum of arguments: 5</span><br></pre></td></tr></table></figure>
-
 <p>实际上，这个功能使用的并不多，因为有更好的替代方案argparser。不过，在随手写的小程序中，<code>sys.argv</code>不失为一个小巧而高效的工具。</p>
 
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://example.com/2022/07/03/python-sys-module/" data-id="clufcjlqk000m7o15apdu94en" data-title="python中sys模块必备知识" class="article-share-link"><span class="fa fa-share">Share</span></a>
+      <a data-url="http://example.com/2022/07/03/python-sys-module/" data-id="clufj25ts000n6g155x7g7fgh" data-title="python中sys模块必备知识" class="article-share-link"><span class="fa fa-share">Share</span></a>
       
       
       

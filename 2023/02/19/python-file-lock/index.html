@@ -6,20 +6,20 @@
   
   <title>python实现文件锁 | Hexo</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-  <meta name="description" content="之前写过一篇用python实现多进程与多线程的文章，在使用多进程或者多线程的情况下，使用锁来实现互斥以避免同时对资源执行读和写就成为一个不可避免的事情。 对于一般的变量资源来说实现互斥锁很简单，使用multiprocessing.Lock类或者threading.Lock即可。但是如果我们要实现互斥的是文件呢？  写这篇文章的初衷是我没有找到现成的库可以用，所以特意自己写了一个想贴出来。但是写到">
+  <meta name="description" content="之前写过一篇用python实现多进程与多线程的文章，在使用多进程或者多线程的情况下，使用锁来实现互斥以避免同时对资源执行读和写就成为一个不可避免的事情。 对于一般的变量资源来说实现互斥锁很简单，使用multiprocessing.Lock类或者threading.Lock即可。但是如果我们要实现互斥的是文件呢？  写这篇文章的初衷是我没有找到现成的库可以用，所以特意自己写了一个想贴出来。">
 <meta property="og:type" content="article">
 <meta property="og:title" content="python实现文件锁">
 <meta property="og:url" content="http://example.com/2023/02/19/python-file-lock/index.html">
 <meta property="og:site_name" content="Hexo">
-<meta property="og:description" content="之前写过一篇用python实现多进程与多线程的文章，在使用多进程或者多线程的情况下，使用锁来实现互斥以避免同时对资源执行读和写就成为一个不可避免的事情。 对于一般的变量资源来说实现互斥锁很简单，使用multiprocessing.Lock类或者threading.Lock即可。但是如果我们要实现互斥的是文件呢？  写这篇文章的初衷是我没有找到现成的库可以用，所以特意自己写了一个想贴出来。但是写到">
+<meta property="og:description" content="之前写过一篇用python实现多进程与多线程的文章，在使用多进程或者多线程的情况下，使用锁来实现互斥以避免同时对资源执行读和写就成为一个不可避免的事情。 对于一般的变量资源来说实现互斥锁很简单，使用multiprocessing.Lock类或者threading.Lock即可。但是如果我们要实现互斥的是文件呢？  写这篇文章的初衷是我没有找到现成的库可以用，所以特意自己写了一个想贴出来。">
 <meta property="og:locale" content="en_US">
-<meta property="og:image" content="http://example.com/assets/2023/02/file_lock_result.jpg">
+<meta property="og:image" content="http://example.com/2023/02/19/assets/2023/02/file_lock_result.jpg">
 <meta property="article:published_time" content="2023-02-19T06:00:38.000Z">
-<meta property="article:modified_time" content="2024-03-31T09:52:37.857Z">
+<meta property="article:modified_time" content="2024-03-31T10:04:34.858Z">
 <meta property="article:author" content="John Doe">
 <meta property="article:tag" content="python">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:image" content="http://example.com/assets/2023/02/file_lock_result.jpg">
+<meta name="twitter:image" content="http://example.com/2023/02/19/assets/2023/02/file_lock_result.jpg">
   
     <link rel="alternate" href="/atom.xml" title="Hexo" type="application/atom+xml">
   
@@ -101,44 +101,46 @@
     <div class="e-content article-entry" itemprop="articleBody">
       
         <blockquote>
-<p>之前写过一篇用<a target="_blank" rel="noopener" href="http://localhost/wordpress/index.php/2022/12/04/python_threads_processes">python实现多进程与多线程</a>的文章，在使用多进程或者多线程的情况下，使用锁来实现互斥以避免同时对资源执行读和写就成为一个不可避免的事情。 对于一般的变量资源来说实现互斥锁很简单，使用<code>multiprocessing.Lock</code>类或者<code>threading.Lock</code>即可。但是如果我们要实现互斥的是文件呢？</p>
+<p>之前写过一篇用<a
+target="_blank" rel="noopener" href="http://localhost/wordpress/index.php/2022/12/04/python_threads_processes">python实现多进程与多线程</a>的文章，在使用多进程或者多线程的情况下，使用锁来实现互斥以避免同时对资源执行读和写就成为一个不可避免的事情。
+对于一般的变量资源来说实现互斥锁很简单，使用<code>multiprocessing.Lock</code>类或者<code>threading.Lock</code>即可。但是如果我们要实现互斥的是文件呢？</p>
 </blockquote>
 <p>写这篇文章的初衷是我没有找到现成的库可以用，所以特意自己写了一个想贴出来。但是写到一半的时候发现了<code>filelock</code>库可以解决这个问题，使用起来要比自己写的更好一些。索性就把原来写的全都删了，分享一下用<code>filelock</code>实现文件锁的方法。</p>
-<h2 id="安装"><a href="#安装" class="headerlink" title="安装"></a>安装</h2><p>使用pip或者conda等安装filelock即可。</p>
+<h2 id="安装">安装</h2>
+<p>使用pip或者conda等安装filelock即可。</p>
 <figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">pip install filelock</span><br></pre></td></tr></table></figure>
-
-<h2 id="使用"><a href="#使用" class="headerlink" title="使用"></a>使用</h2><p>这里将介绍一下用<code>filelock</code>模块实现文件锁的基本用法。</p>
-<p> <strong>导入接口</strong></p>
+<h2 id="使用">使用</h2>
+<p>这里将介绍一下用<code>filelock</code>模块实现文件锁的基本用法。</p>
+<p><strong>导入接口</strong></p>
 <figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">from filelock import FileLock</span><br></pre></td></tr></table></figure>
-
 <p><strong>文件和锁文件</strong></p>
 <figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">file = &quot;file.txt&quot;</span><br><span class="line">lockfile = file + &quot;.lock&quot;</span><br></pre></td></tr></table></figure>
-
-<p>这里的文件<code>file</code>是我们要实现互斥锁定的文件。 锁文件<code>lockfile</code>用于确定是否允许进程或者线程访问该文件，具体机制我们可以不必关心，能够正确创建的使用就可以了。</p>
-<p> <strong>实例化锁对象</strong></p>
+<p>这里的文件<code>file</code>是我们要实现互斥锁定的文件。
+锁文件<code>lockfile</code>用于确定是否允许进程或者线程访问该文件，具体机制我们可以不必关心，能够正确创建的使用就可以了。</p>
+<p><strong>实例化锁对象</strong></p>
 <figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">lock = FileLock(lockfile)</span><br></pre></td></tr></table></figure>
-
-<p>实例化出来一个锁对象<code>lock</code>，注意这里的参数是锁文件<code>lockfile</code>而不是文件<code>file</code>。 <code>lock</code>在上锁的时候，如果文件已经被其他对象上了锁，那么将一直等待到文件被其他对象释放锁后再上锁。如果不想在获取不到锁的时候永远等待下去，可以如下实例化锁对象：</p>
+<p>实例化出来一个锁对象<code>lock</code>，注意这里的参数是锁文件<code>lockfile</code>而不是文件<code>file</code>。
+<code>lock</code>在上锁的时候，如果文件已经被其他对象上了锁，那么将一直等待到文件被其他对象释放锁后再上锁。如果不想在获取不到锁的时候永远等待下去，可以如下实例化锁对象：</p>
 <figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">lock = FileLock(lockfile, timeout = 5)</span><br></pre></td></tr></table></figure>
-
 <p>这时，<code>lock</code>在上锁的时候，如果文件已经被其他对象上了锁，那么在5秒内如果文件被其他对象释放锁，<code>lock</code>会对其上锁；否则就会因超时而报错退出。</p>
-<p> <strong>锁的获取和释放</strong></p>
+<p><strong>锁的获取和释放</strong></p>
 <figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">lock.acquire()</span><br><span class="line"># do something...</span><br><span class="line">lock.release()</span><br></pre></td></tr></table></figure>
-
 <p>使用方法很直观，<code>acquire()</code>方法用于获取锁，<code>release()</code>方法用于释放锁。</p>
 <p><strong>完整代码</strong></p>
 <figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">from</span> filelock <span class="keyword">import</span> FileLock</span><br><span class="line"></span><br><span class="line">file = <span class="string">&quot;file.txt&quot;</span></span><br><span class="line">lockfile = file + <span class="string">&quot;.lock&quot;</span></span><br><span class="line"></span><br><span class="line">lock = FileLock(lockfile)</span><br><span class="line">lock.acquire()</span><br><span class="line"><span class="keyword">try</span>:</span><br><span class="line">    <span class="built_in">print</span>(<span class="string">&quot;acquire the lock!&quot;</span>)</span><br><span class="line">    <span class="comment"># do something to the file...</span></span><br><span class="line"><span class="keyword">finally</span>:</span><br><span class="line">    lock.release()</span><br><span class="line">    <span class="built_in">print</span>(<span class="string">&quot;release the lock!&quot;</span>)</span><br></pre></td></tr></table></figure>
-
-<h2 id="例子"><a href="#例子" class="headerlink" title="例子"></a>例子</h2><p>这里，我们将分别跑两个相同的脚本<code>main1.py</code>和<code>main2.py</code>以模拟多进程，这两个脚本均试图排他的获取文件<code>file.txt</code>。 <code>main1.py</code>和<code>main2.py</code>中的内容：</p>
+<h2 id="例子">例子</h2>
+<p>这里，我们将分别跑两个相同的脚本<code>main1.py</code>和<code>main2.py</code>以模拟多进程，这两个脚本均试图排他的获取文件<code>file.txt</code>。
+<code>main1.py</code>和<code>main2.py</code>中的内容：</p>
 <figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line">import time</span><br><span class="line">from filelock import FileLock</span><br><span class="line"></span><br><span class="line">file = &quot;file.txt&quot;</span><br><span class="line">lockfile = &quot;file.txt.lock&quot;</span><br><span class="line"></span><br><span class="line">lock = FileLock(lockfile)</span><br><span class="line"></span><br><span class="line">lock.acquire()</span><br><span class="line">try:</span><br><span class="line">    # do something to the file...</span><br><span class="line">    time_now = time.strftime(&#x27;%H:%M:%S&#x27;, time.localtime())</span><br><span class="line">    print(time_now + &quot;: acquire the lock!&quot;)</span><br><span class="line">    time.sleep(5)</span><br><span class="line">finally:</span><br><span class="line">    lock.release()</span><br><span class="line">    time_now = time.strftime(&#x27;%H:%M:%S&#x27;, time.localtime())</span><br><span class="line">    print(time_now + &quot;: release the lock!&quot;)</span><br></pre></td></tr></table></figure>
-
-<p>先后将<code>main1.py</code>和<code>main2.py</code>跑起来，输出如下： <img src="/../assets/2023/02/file_lock_result.jpg" alt="file_lock_result"></p>
+<p>先后将<code>main1.py</code>和<code>main2.py</code>跑起来，输出如下：
+<img src="../assets/2023/02/file_lock_result.jpg"
+alt="file_lock_result" /></p>
 <p>显然，<code>main1.py</code>先完成了对文件上锁，<code>main2.py</code>就一直处于等待中，一直到<code>main1.py</code>释放了锁，<code>main2.py</code>实现了文件上锁，从而实现了对文件的互斥性访问。</p>
 
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://example.com/2023/02/19/python-file-lock/" data-id="clufcjlqf000b7o15gfw5ago4" data-title="python实现文件锁" class="article-share-link"><span class="fa fa-share">Share</span></a>
+      <a data-url="http://example.com/2023/02/19/python-file-lock/" data-id="clufj25tq000h6g159c6rhzxj" data-title="python实现文件锁" class="article-share-link"><span class="fa fa-share">Share</span></a>
       
       
       

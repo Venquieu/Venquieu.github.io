@@ -4,22 +4,22 @@
   <meta charset="utf-8">
   
   
-  <title>python多进程与多线程 | Hexo</title>
+  <title>python多进程与多线程 | Venturi Li&#39;s Space</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
   <meta name="description" content="多进程和多线程在编程中是一个重要的特性，本文主要讲解在python中如何实现多线程和多进程。 多线程 python中多线程速度慢，不建议使用！ python中的多线程机制不够完善，用起来效果很鸡肋。以我的实现为例，在不使用多线程的情况下运行一次需要5s左右，使用多线程之后反而需要14s之久。这显然是不可接受的，所以不推荐在python中使用多线程，如果真的需要并发，建议使用多进程代替。 p">
 <meta property="og:type" content="article">
 <meta property="og:title" content="python多进程与多线程">
-<meta property="og:url" content="http://example.com/2022/12/04/python-threads-processes/index.html">
-<meta property="og:site_name" content="Hexo">
+<meta property="og:url" content="https://venquieu.github.io/2022/12/04/python-threads-processes/index.html">
+<meta property="og:site_name" content="Venturi Li&#39;s Space">
 <meta property="og:description" content="多进程和多线程在编程中是一个重要的特性，本文主要讲解在python中如何实现多线程和多进程。 多线程 python中多线程速度慢，不建议使用！ python中的多线程机制不够完善，用起来效果很鸡肋。以我的实现为例，在不使用多线程的情况下运行一次需要5s左右，使用多线程之后反而需要14s之久。这显然是不可接受的，所以不推荐在python中使用多线程，如果真的需要并发，建议使用多进程代替。 p">
 <meta property="og:locale" content="en_US">
 <meta property="article:published_time" content="2022-12-04T13:43:42.000Z">
 <meta property="article:modified_time" content="2024-03-31T09:43:26.690Z">
-<meta property="article:author" content="John Doe">
+<meta property="article:author" content="Venturi Li">
 <meta property="article:tag" content="python">
 <meta name="twitter:card" content="summary">
   
-    <link rel="alternate" href="/atom.xml" title="Hexo" type="application/atom+xml">
+    <link rel="alternate" href="/atom.xml" title="Venturi Li's Space" type="application/atom+xml">
   
   
     <link rel="shortcut icon" href="/favicon.png">
@@ -44,7 +44,7 @@
   <div id="header-outer" class="outer">
     <div id="header-title" class="inner">
       <h1 id="logo-wrap">
-        <a href="/" id="logo">Hexo</a>
+        <a href="/" id="logo">Venturi Li&#39;s Space</a>
       </h1>
       
     </div>
@@ -65,7 +65,7 @@
         <a class="nav-icon nav-search-btn" title="Search"><span class="fa fa-search"></span></a>
       </nav>
       <div id="search-form-wrap">
-        <form action="//google.com/search" method="get" accept-charset="UTF-8" class="search-form"><input type="search" name="q" class="search-form-input" placeholder="Search"><button type="submit" class="search-form-submit">&#xF002;</button><input type="hidden" name="sitesearch" value="http://example.com"></form>
+        <form action="//google.com/search" method="get" accept-charset="UTF-8" class="search-form"><input type="search" name="q" class="search-form-input" placeholder="Search"><button type="submit" class="search-form-submit">&#xF002;</button><input type="hidden" name="sitesearch" value="https://venquieu.github.io"></form>
       </div>
     </div>
   </div>
@@ -132,7 +132,7 @@ Lock</a>(GIL)，线程只有获得GIL才可运行，导致的结果是每次最�
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://example.com/2022/12/04/python-threads-processes/" data-id="clufj25tt000r6g152t55e2xu" data-title="python多进程与多线程" class="article-share-link"><span class="fa fa-share">Share</span></a>
+      <a data-url="https://venquieu.github.io/2022/12/04/python-threads-processes/" data-id="clufj25tt000r6g152t55e2xu" data-title="python多进程与多线程" class="article-share-link"><span class="fa fa-share">Share</span></a>
       
       
       
@@ -202,7 +202,7 @@ Lock</a>(GIL)，线程只有获得GIL才可运行，导致的结果是每次最�
   <div class="widget-wrap">
     <h3 class="widget-title">Archives</h3>
     <div class="widget">
-      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2024/03/">March 2024</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/03/">March 2023</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/02/">February 2023</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/12/">December 2022</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/10/">October 2022</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/08/">August 2022</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/07/">July 2022</a></li></ul>
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2024/05/">May 2024</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2024/03/">March 2024</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/03/">March 2023</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/02/">February 2023</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/12/">December 2022</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/10/">October 2022</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/08/">August 2022</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/07/">July 2022</a></li></ul>
     </div>
   </div>
 
@@ -213,6 +213,10 @@ Lock</a>(GIL)，线程只有获得GIL才可运行，导致的结果是每次最�
     <h3 class="widget-title">Recent Posts</h3>
     <div class="widget">
       <ul>
+        
+          <li>
+            <a href="/2024/05/03/240423-FastInst/">240423-FastInst</a>
+          </li>
         
           <li>
             <a href="/2024/03/30/Config-GitHub-Pages-with-Hexo/">使用Hexo搭建GitHub博客</a>
@@ -230,10 +234,6 @@ Lock</a>(GIL)，线程只有获得GIL才可运行，导致的结果是每次最�
             <a href="/2023/03/04/pytorch-model-to-torchscript/">pyTorch模型转torchscript</a>
           </li>
         
-          <li>
-            <a href="/2023/02/19/python-file-lock/">python实现文件锁</a>
-          </li>
-        
       </ul>
     </div>
   </div>
@@ -247,7 +247,7 @@ Lock</a>(GIL)，线程只有获得GIL才可运行，导致的结果是每次最�
   <div class="outer">
     <div id="footer-info" class="inner">
       
-      &copy; 2024 John Doe<br>
+      &copy; 2024 Venturi Li<br>
       Powered by <a href="https://hexo.io/" target="_blank">Hexo</a>
     </div>
   </div>

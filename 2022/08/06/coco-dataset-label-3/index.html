@@ -6,15 +6,15 @@
   
   <title>深入探究COCO数据集（三） | Venturi Li&#39;s Space</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-  <meta name="description" content="本文是专题 深入探究COCO数据集标签 的第三部分，主要讲解如何加载自己的COCO style的数据集。其他部分链接： 深入探究COCO数据集（一）——COCO标签格式 深入探究COCO数据集（二）——制作COCO style的数据集 pycocotools pycocotools提供了COCO数据集交互的接口，加载COCO style的数据集通常使用其完成，更准确地说，是通过pyc">
+  <meta name="description" content="本文是专题 深入探究COCO数据集标签 的第三部分，主要讲解如何加载COCO style的数据集。其他部分链接： 深入探究COCO数据集（一）——COCO标签格式 深入探究COCO数据集（二）——制作COCO style的数据集 pycocotools pycocotools提供了COCO数据集交互的接口，加载COCO style的数据集通常使用其完成，更准确地说，是通过pycoco">
 <meta property="og:type" content="article">
 <meta property="og:title" content="深入探究COCO数据集（三）">
 <meta property="og:url" content="https://venquieu.github.io/2022/08/06/coco-dataset-label-3/index.html">
 <meta property="og:site_name" content="Venturi Li&#39;s Space">
-<meta property="og:description" content="本文是专题 深入探究COCO数据集标签 的第三部分，主要讲解如何加载自己的COCO style的数据集。其他部分链接： 深入探究COCO数据集（一）——COCO标签格式 深入探究COCO数据集（二）——制作COCO style的数据集 pycocotools pycocotools提供了COCO数据集交互的接口，加载COCO style的数据集通常使用其完成，更准确地说，是通过pyc">
+<meta property="og:description" content="本文是专题 深入探究COCO数据集标签 的第三部分，主要讲解如何加载COCO style的数据集。其他部分链接： 深入探究COCO数据集（一）——COCO标签格式 深入探究COCO数据集（二）——制作COCO style的数据集 pycocotools pycocotools提供了COCO数据集交互的接口，加载COCO style的数据集通常使用其完成，更准确地说，是通过pycoco">
 <meta property="og:locale" content="en_US">
 <meta property="article:published_time" content="2022-08-06T14:58:09.000Z">
-<meta property="article:modified_time" content="2024-03-31T09:00:59.003Z">
+<meta property="article:modified_time" content="2024-05-26T02:34:09.761Z">
 <meta property="article:author" content="Venturi Li">
 <meta property="article:tag" content="数据集">
 <meta name="twitter:card" content="summary">
@@ -98,32 +98,115 @@
     
     <div class="e-content article-entry" itemprop="articleBody">
       
-        <p>本文是专题 深入探究COCO数据集标签
-的第三部分，主要讲解如何加载自己的COCO style的数据集。其他部分链接：</p>
+        <p>本文是专题 深入探究COCO数据集标签 的第三部分，主要讲解如何加载COCO
+style的数据集。其他部分链接：</p>
 <p><a
-target="_blank" rel="noopener" href="http://localhost/wordpress/index.php/2022/07/31/coco_dataset_label_1/">深入探究COCO数据集（一）</a>——COCO标签格式</p>
+href="https://venquieu.github.io/2022/07/31/coco_dataset_label_1/">深入探究COCO数据集（一）</a>——COCO标签格式</p>
 <p><a
-target="_blank" rel="noopener" href="http://localhost/wordpress/index.php/2022/08/06/coco_dataset_label_2/">深入探究COCO数据集（二）</a>——制作COCO
+href="https://venquieu.github.io/2022/08/06/coco_dataset_label_2/">深入探究COCO数据集（二）</a>——制作COCO
 style的数据集</p>
 <h2 id="pycocotools">pycocotools</h2>
 <p><code>pycocotools</code>提供了COCO数据集交互的接口，加载COCO
 style的数据集通常使用其完成，更准确地说，是通过<code>pycocotools.coco</code>中的<code>COCO</code>类实现。标签加载过程如下：</p>
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">from pycocotools.coco import COCO</span><br><span class="line">coco = COCO(info_file)</span><br></pre></td></tr></table></figure>
-<p>得到一个<code>COCO</code>对象之后呢？别急，先来说几个<code>COCO</code>类中的接口：</p>
-<ol type="1">
-<li>属性<code>anns</code>：字典，键为标签id（<code>ann_id</code>），值为对应的字典形式的标签信息；</li>
-<li>属性<code>imgs</code>：字典，键为图像id（<code>image_id</code>），值为对应的字典形式的图像信息；</li>
-<li>属性<code>cats</code>：字典，键为类别id（<code>category_id</code>），值为对应类别字典形式的信息；</li>
-<li>属性<code>imgToAnns</code>：字典，键为图像id（<code>image_id</code>），值为对应的字典形式的标签信息；</li>
-<li>属性<code>catToImgs</code>：字典，键为类别id（<code>category_id</code>），值为对应的图像id（<code>image_id</code>）；</li>
-<li>方法<code>getAnnIds()</code>：根据图像id（<code>image_id</code>）、类别id（<code>category_id</code>）获取对应的标签id（<code>ann_id</code>），如果没有参数传回一个包含全部标签id的列表；</li>
-<li>方法<code>getImgIds()</code>：根据图像id（<code>image_id</code>）、类别id（<code>category_id</code>）获取对应的图像id（<code>image_id</code>），如果没有参数传回一个包含全部图像id的列表；</li>
-<li>方法<code>getCatIds()</code>：根据类别名字、类别父类名字、类别id（<code>category_id</code>）获取对应的类别id（<code>category_id</code>），如果没有参数传回一个包含全部类别id的列表；</li>
-<li>方法<code>loadAnns()</code>：获得给定标签（<code>ann_id</code>）对应的字典形式的标签信息，用<code>anns</code>属性实现；</li>
-<li>方法<code>loadImgs()</code>：获得给定图像（<code>image_id</code>）对应的字典形式的图像信息，用<code>imgs</code>属性实现；</li>
-<li>方法<code>loadCats()</code>：获得给定类别（<code>category_id</code>）对应的字典形式的类别信息，用<code>cats</code>属性实现；</li>
-<li>方法<code>annToMask()</code>：获得给定标签信息（键值对字典）对应的掩膜。</li>
-</ol>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">from pycocotools.coco import COCO</span><br><span class="line">coco = COCO(ann_file)</span><br></pre></td></tr></table></figure>
+<p>得到一个<code>COCO</code>对象之后呢？别急，先来说几个<code>COCO</code>类中常用的接口：</p>
+<h3 id="属性">属性</h3>
+<p>常用属性的类型均为字典。</p>
+<table>
+<colgroup>
+<col style="width: 11%" />
+<col style="width: 13%" />
+<col style="width: 30%" />
+<col style="width: 45%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>名称</th>
+<th>键</th>
+<th>值</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>anns</code></td>
+<td><code>ann_id</code></td>
+<td>字典，标注文件中对应的标注信息</td>
+<td>由<code>ann_id</code>快速索引标注</td>
+</tr>
+<tr class="even">
+<td><code>imgs</code></td>
+<td><code>image_id</code></td>
+<td>字典，标注文件中对应的图像信息</td>
+<td>由<code>image_id</code>快速索引图像</td>
+</tr>
+<tr class="odd">
+<td><code>cats</code></td>
+<td><code>category_id</code></td>
+<td>字典，标注文件中对应的类别信息</td>
+<td>由<code>category_id</code>快速索引类别</td>
+</tr>
+<tr class="even">
+<td><code>imgToAnns</code></td>
+<td><code>image_id</code></td>
+<td>列表，元素为字典形式的标注信息</td>
+<td>由<code>image_id</code>快速索引该图像全部标注</td>
+</tr>
+<tr class="odd">
+<td><code>catToImgs</code></td>
+<td><code>category_id</code></td>
+<td>列表，元素为<code>image_id</code></td>
+<td>由<code>category_id</code>索引有该类别标注的全部图像的id</td>
+</tr>
+</tbody>
+</table>
+<h3 id="方法">方法</h3>
+<p><strong><code>getAnnIds()</code></strong></p>
+<ul>
+<li><p>参数：<code>imgIds</code>：待查询<code>image_id</code>（可选）、<code>catIds</code>：待查询<code>category_id</code>（可选）。</p></li>
+<li><p>返回值：符合全部筛选条件的<code>ann_id</code>列表，如果没有入参返回包含全部<code>ann_id</code>的列表。</p></li>
+<li><p>示例：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&gt;&gt;&gt; </span>coco.getAnnIds(imgIds=<span class="number">100</span>)</span><br><span class="line">[<span class="number">246</span>, <span class="number">247</span>]</span><br></pre></td></tr></table></figure></li>
+</ul>
+<p><strong><code>getImgIds()</code></strong></p>
+<ul>
+<li><p>参数：<code>imgIds</code>：待查询<code>image_id</code>（可选）、<code>catIds</code>：待查询<code>category_id</code>（可选）。</p></li>
+<li><p>返回值：符合全部筛选条件的<code>image_id</code>列表，如果没有入参返回包含全部<code>image_id</code>的列表。</p></li>
+<li><p>示例： <figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&gt;&gt;&gt; </span>coco.getImgIds(imgIds=[<span class="number">1</span>, <span class="number">10</span>, <span class="number">100</span>], catIds=<span class="number">6</span>) <span class="comment"># 三张图中包含category_id=6标注的图</span></span><br><span class="line">[<span class="number">100</span>]</span><br></pre></td></tr></table></figure></p></li>
+</ul>
+<p><strong><code>getCatIds()</code></strong></p>
+<ul>
+<li><p>参数：<code>catNms</code>：类别名字（可选）、<code>supNms</code>：父类名字（可选）、<code>catIds</code>：<code>category_id</code>（可选）。</p></li>
+<li><p>返回值：符合全部筛选条件的<code>category_id</code>列表，如果没有入参返回包含全部<code>category_id</code>的列表。</p></li>
+<li><p>示例： <figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&gt;&gt;&gt; </span>coco.getCatIds(catNms=<span class="string">&quot;chairs&quot;</span>, catIds=<span class="number">6</span>)</span><br><span class="line">[<span class="number">6</span>]</span><br></pre></td></tr></table></figure></p></li>
+</ul>
+<p><strong><code>loadAnns()</code></strong></p>
+<ul>
+<li><p>参数：<code>ids</code>：<code>ann_id</code>（可选）。</p></li>
+<li><p>返回值：标注文件中对应传入<code>ann_id</code>的标注信息列表，如果没有入参返回包含全部标注的列表。</p></li>
+<li><p>机制：通过<code>anns</code>属性实现。</p></li>
+<li><p>示例： <figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">&gt;&gt;&gt; coco.loadAnns(ids=[2, 3])</span><br></pre></td></tr></table></figure></p></li>
+</ul>
+<p><strong><code>loadImgs()</code></strong></p>
+<ul>
+<li><p>参数：<code>ids</code>：<code>image_id</code>（可选）。</p></li>
+<li><p>返回值：标注文件中对应传入<code>image_id</code>的图像信息列表，如果没有入参返回包含全部图像信息的列表。</p></li>
+<li><p>机制：通过<code>imgs</code>属性实现。</p></li>
+<li><p>示例： <figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">&gt;&gt;&gt; coco.loadImgs(ids=0)</span><br></pre></td></tr></table></figure></p></li>
+</ul>
+<p><strong><code>loadCats()</code></strong></p>
+<ul>
+<li><p>参数：<code>ids</code>：<code>category_id</code>（可选）。</p></li>
+<li><p>返回值：标注文件中对应传入<code>category_id</code>的类别信息列表，如果没有入参返回包含全部类别信息的列表。</p></li>
+<li><p>机制：通过<code>cats</code>属性实现。</p></li>
+<li><p>示例： <figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">&gt;&gt;&gt; coco.loadCats(ids=6)</span><br></pre></td></tr></table></figure></p></li>
+</ul>
+<p><strong><code>annToMask()</code></strong></p>
+<ul>
+<li><p>参数：<code>ann</code>：标注信息字典。</p></li>
+<li><p>返回值：<code>ann['segmentation']</code>中的多边形对应的掩膜，类型为<code>np.ndarray</code></p></li>
+<li><p>示例： <figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">mask = coco.annToMask(coco.anns[<span class="number">0</span>])</span><br></pre></td></tr></table></figure></p></li>
+</ul>
 <h2 id="coco-style数据加载">COCO style数据加载</h2>
 <p>其实加载COCO数据集的过程无非就是运用上述属性和方法获得对应信息的过程，掌握了上述接口加载数据就很简单了。</p>
 <p>由于很多开源代码中都写有COCO的数据加载类，大多数情况下我们无须自己重写，但是在一些特殊情况下需要根据需求重写或修改，个人比较推荐参考YOLACT代码中的<a
@@ -136,7 +219,7 @@ style数据集在使用相关模型的时候也很有益。希望本专题能抛
       
     </div>
     <footer class="article-footer">
-      <a data-url="https://venquieu.github.io/2022/08/06/coco-dataset-label-3/" data-id="clvqgrc2c0007uc15eaiggnay" data-title="深入探究COCO数据集（三）" class="article-share-link"><span class="fa fa-share">Share</span></a>
+      <a data-url="https://venquieu.github.io/2022/08/06/coco-dataset-label-3/" data-id="clwmxhurn0009jw1570h79hkj" data-title="深入探究COCO数据集（三）" class="article-share-link"><span class="fa fa-share">Share</span></a>
       
       
       
@@ -187,7 +270,7 @@ style数据集在使用相关模型的时候也很有益。希望本专题能抛
   <div class="widget-wrap">
     <h3 class="widget-title">Tags</h3>
     <div class="widget">
-      <ul class="tag-list" itemprop="keywords"><li class="tag-list-item"><a class="tag-list-link" href="/tags/pyTorch/" rel="tag">pyTorch</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/python/" rel="tag">python</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E6%95%B0%E6%8D%AE%E9%9B%86/" rel="tag">数据集</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E8%AE%BA%E6%96%87/" rel="tag">论文</a></li></ul>
+      <ul class="tag-list" itemprop="keywords"><li class="tag-list-item"><a class="tag-list-link" href="/tags/pyTorch/" rel="tag">pyTorch</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/python/" rel="tag">python</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/review/" rel="tag">review</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E6%95%B0%E6%8D%AE%E9%9B%86/" rel="tag">数据集</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E8%AE%BA%E6%96%87/" rel="tag">论文</a></li></ul>
     </div>
   </div>
 
@@ -197,7 +280,7 @@ style数据集在使用相关模型的时候也很有益。希望本专题能抛
   <div class="widget-wrap">
     <h3 class="widget-title">Tag Cloud</h3>
     <div class="widget tagcloud">
-      <a href="/tags/pyTorch/" style="font-size: 10px;">pyTorch</a> <a href="/tags/python/" style="font-size: 20px;">python</a> <a href="/tags/%E6%95%B0%E6%8D%AE%E9%9B%86/" style="font-size: 15px;">数据集</a> <a href="/tags/%E8%AE%BA%E6%96%87/" style="font-size: 10px;">论文</a>
+      <a href="/tags/pyTorch/" style="font-size: 10px;">pyTorch</a> <a href="/tags/python/" style="font-size: 20px;">python</a> <a href="/tags/review/" style="font-size: 10px;">review</a> <a href="/tags/%E6%95%B0%E6%8D%AE%E9%9B%86/" style="font-size: 15px;">数据集</a> <a href="/tags/%E8%AE%BA%E6%96%87/" style="font-size: 10px;">论文</a>
     </div>
   </div>
 
@@ -206,7 +289,7 @@ style数据集在使用相关模型的时候也很有益。希望本专题能抛
   <div class="widget-wrap">
     <h3 class="widget-title">Archives</h3>
     <div class="widget">
-      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2024/05/">May 2024</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2024/03/">March 2024</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/03/">March 2023</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/02/">February 2023</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/12/">December 2022</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/10/">October 2022</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/08/">August 2022</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/07/">July 2022</a></li></ul>
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2024/05/">May 2024</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2024/04/">April 2024</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2024/03/">March 2024</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/03/">March 2023</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/02/">February 2023</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/12/">December 2022</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/10/">October 2022</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/08/">August 2022</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/07/">July 2022</a></li></ul>
     </div>
   </div>
 
@@ -223,7 +306,11 @@ style数据集在使用相关模型的时候也很有益。希望本专题能抛
           </li>
         
           <li>
-            <a href="/2024/03/30/Config-GitHub-Pages-with-Hexo/">使用Hexo搭建GitHub博客</a>
+            <a href="/2024/04/06/240406-summary/">关于深度学习的一些总结</a>
+          </li>
+        
+          <li>
+            <a href="/2024/03/30/240330-Config-GitHub-Pages-with-Hexo/">使用Hexo搭建GitHub博客</a>
           </li>
         
           <li>
@@ -232,10 +319,6 @@ style数据集在使用相关模型的时候也很有益。希望本专题能抛
         
           <li>
             <a href="/2023/03/05/pytorch-model-to-onnx/">pyTorch模型转onnx</a>
-          </li>
-        
-          <li>
-            <a href="/2023/03/04/pytorch-model-to-torchscript/">pyTorch模型转torchscript</a>
           </li>
         
       </ul>

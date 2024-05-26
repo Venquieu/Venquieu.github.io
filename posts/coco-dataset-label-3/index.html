@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  
+  <title>深入探究COCO数据集（三） | Venturi Li&#39;s Space</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <meta name="description" content="本文是专题 深入探究COCO数据集标签 的第三部分，主要讲解如何加载COCO style的数据集。其他部分链接： 深入探究COCO数据集（一）——COCO标签格式 深入探究COCO数据集（二）——制作COCO style的数据集 pycocotools pycocotools提供了COCO数据集交互的接口，加载COCO style的数据集通常使用其完成，更准确地说，是通过pycoco">
+<meta property="og:type" content="article">
+<meta property="og:title" content="深入探究COCO数据集（三）">
+<meta property="og:url" content="https://venquieu.github.io/posts/coco-dataset-label-3/index.html">
+<meta property="og:site_name" content="Venturi Li&#39;s Space">
+<meta property="og:description" content="本文是专题 深入探究COCO数据集标签 的第三部分，主要讲解如何加载COCO style的数据集。其他部分链接： 深入探究COCO数据集（一）——COCO标签格式 深入探究COCO数据集（二）——制作COCO style的数据集 pycocotools pycocotools提供了COCO数据集交互的接口，加载COCO style的数据集通常使用其完成，更准确地说，是通过pycoco">
+<meta property="og:locale" content="en_US">
+<meta property="article:published_time" content="2022-08-06T14:58:09.000Z">
+<meta property="article:modified_time" content="2024-05-26T02:42:37.972Z">
+<meta property="article:author" content="Venturi Li">
+<meta property="article:tag" content="数据集">
+<meta name="twitter:card" content="summary">
+  
+    <link rel="alternate" href="/atom.xml" title="Venturi Li's Space" type="application/atom+xml">
+  
+  
+    <link rel="shortcut icon" href="/favicon.png">
+  
+  
+  
+<link rel="stylesheet" href="/css/style.css">
+
+  
+    
+<link rel="stylesheet" href="/fancybox/jquery.fancybox.min.css">
+
+  
+  
+<meta name="generator" content="Hexo 7.1.1"></head>
+
+<body>
+  <div id="container">
+    <div id="wrap">
+      <header id="header">
+  <div id="banner"></div>
+  <div id="header-outer" class="outer">
+    <div id="header-title" class="inner">
+      <h1 id="logo-wrap">
+        <a href="/" id="logo">Venturi Li&#39;s Space</a>
+      </h1>
+      
+    </div>
+    <div id="header-inner" class="inner">
+      <nav id="main-nav">
+        <a id="main-nav-toggle" class="nav-icon"><span class="fa fa-bars"></span></a>
+        
+          <a class="main-nav-link" href="/">Home</a>
+        
+          <a class="main-nav-link" href="/archives">Archives</a>
+        
+      </nav>
+      <nav id="sub-nav">
+        
+        
+          <a class="nav-icon" href="/atom.xml" title="RSS Feed"><span class="fa fa-rss"></span></a>
+        
+        <a class="nav-icon nav-search-btn" title="Search"><span class="fa fa-search"></span></a>
+      </nav>
+      <div id="search-form-wrap">
+        <form action="//google.com/search" method="get" accept-charset="UTF-8" class="search-form"><input type="search" name="q" class="search-form-input" placeholder="Search"><button type="submit" class="search-form-submit">&#xF002;</button><input type="hidden" name="sitesearch" value="https://venquieu.github.io"></form>
+      </div>
+    </div>
+  </div>
+</header>
+
+      <div class="outer">
+        <section id="main"><article id="post-coco-dataset-label-3" class="h-entry article article-type-post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
+  <div class="article-meta">
+    <a href="/posts/coco-dataset-label-3/" class="article-date">
+  <time class="dt-published" datetime="2022-08-06T14:58:09.000Z" itemprop="datePublished">2022-08-06</time>
+</a>
+    
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/%E6%B7%B1%E5%BA%A6%E5%AD%A6%E4%B9%A0/">深度学习</a>
+  </div>
+
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="p-name article-title" itemprop="headline name">
+      深入探究COCO数据集（三）
+    </h1>
+  
+
+      </header>
+    
+    <div class="e-content article-entry" itemprop="articleBody">
+      
+        <p>本文是专题 深入探究COCO数据集标签 的第三部分，主要讲解如何加载COCO
+style的数据集。其他部分链接：</p>
+<p><a
+href="https://venquieu.github.io/2022/07/31/coco-dataset-label-1/">深入探究COCO数据集（一）</a>——COCO标签格式</p>
+<p><a
+href="https://venquieu.github.io/2022/08/06/coco-dataset-label-2/">深入探究COCO数据集（二）</a>——制作COCO
+style的数据集</p>
+<h2 id="pycocotools">pycocotools</h2>
+<p><code>pycocotools</code>提供了COCO数据集交互的接口，加载COCO
+style的数据集通常使用其完成，更准确地说，是通过<code>pycocotools.coco</code>中的<code>COCO</code>类实现。标签加载过程如下：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">from pycocotools.coco import COCO</span><br><span class="line">coco = COCO(ann_file)</span><br></pre></td></tr></table></figure>
+<p>得到一个<code>COCO</code>对象之后呢？别急，先来说几个<code>COCO</code>类中常用的接口：</p>
+<h3 id="属性">属性</h3>
+<p>常用属性的类型均为字典。</p>
+<table>
+<colgroup>
+<col style="width: 11%" />
+<col style="width: 13%" />
+<col style="width: 30%" />
+<col style="width: 45%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>名称</th>
+<th>键</th>
+<th>值</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>anns</code></td>
+<td><code>ann_id</code></td>
+<td>字典，标注文件中对应的标注信息</td>
+<td>由<code>ann_id</code>快速索引标注</td>
+</tr>
+<tr class="even">
+<td><code>imgs</code></td>
+<td><code>image_id</code></td>
+<td>字典，标注文件中对应的图像信息</td>
+<td>由<code>image_id</code>快速索引图像</td>
+</tr>
+<tr class="odd">
+<td><code>cats</code></td>
+<td><code>category_id</code></td>
+<td>字典，标注文件中对应的类别信息</td>
+<td>由<code>category_id</code>快速索引类别</td>
+</tr>
+<tr class="even">
+<td><code>imgToAnns</code></td>
+<td><code>image_id</code></td>
+<td>列表，元素为字典形式的标注信息</td>
+<td>由<code>image_id</code>快速索引该图像全部标注</td>
+</tr>
+<tr class="odd">
+<td><code>catToImgs</code></td>
+<td><code>category_id</code></td>
+<td>列表，元素为<code>image_id</code></td>
+<td>由<code>category_id</code>索引有该类别标注的全部图像的id</td>
+</tr>
+</tbody>
+</table>
+<h3 id="方法">方法</h3>
+<p><strong><code>getAnnIds()</code></strong></p>
+<ul>
+<li><p>参数：<code>imgIds</code>：待查询<code>image_id</code>（可选）、<code>catIds</code>：待查询<code>category_id</code>（可选）。</p></li>
+<li><p>返回值：符合全部筛选条件的<code>ann_id</code>列表，如果没有入参返回包含全部<code>ann_id</code>的列表。</p></li>
+<li><p>示例：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&gt;&gt;&gt; </span>coco.getAnnIds(imgIds=<span class="number">100</span>)</span><br><span class="line">[<span class="number">246</span>, <span class="number">247</span>]</span><br></pre></td></tr></table></figure></li>
+</ul>
+<p><strong><code>getImgIds()</code></strong></p>
+<ul>
+<li><p>参数：<code>imgIds</code>：待查询<code>image_id</code>（可选）、<code>catIds</code>：待查询<code>category_id</code>（可选）。</p></li>
+<li><p>返回值：符合全部筛选条件的<code>image_id</code>列表，如果没有入参返回包含全部<code>image_id</code>的列表。</p></li>
+<li><p>示例： <figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&gt;&gt;&gt; </span>coco.getImgIds(imgIds=[<span class="number">1</span>, <span class="number">10</span>, <span class="number">100</span>], catIds=<span class="number">6</span>) <span class="comment"># 三张图中包含category_id=6标注的图</span></span><br><span class="line">[<span class="number">100</span>]</span><br></pre></td></tr></table></figure></p></li>
+</ul>
+<p><strong><code>getCatIds()</code></strong></p>
+<ul>
+<li><p>参数：<code>catNms</code>：类别名字（可选）、<code>supNms</code>：父类名字（可选）、<code>catIds</code>：<code>category_id</code>（可选）。</p></li>
+<li><p>返回值：符合全部筛选条件的<code>category_id</code>列表，如果没有入参返回包含全部<code>category_id</code>的列表。</p></li>
+<li><p>示例： <figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&gt;&gt;&gt; </span>coco.getCatIds(catNms=<span class="string">&quot;chairs&quot;</span>, catIds=<span class="number">6</span>)</span><br><span class="line">[<span class="number">6</span>]</span><br></pre></td></tr></table></figure></p></li>
+</ul>
+<p><strong><code>loadAnns()</code></strong></p>
+<ul>
+<li><p>参数：<code>ids</code>：<code>ann_id</code>（可选）。</p></li>
+<li><p>返回值：标注文件中对应传入<code>ann_id</code>的标注信息列表，如果没有入参返回包含全部标注的列表。</p></li>
+<li><p>机制：通过<code>anns</code>属性实现。</p></li>
+<li><p>示例： <figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">&gt;&gt;&gt; coco.loadAnns(ids=[2, 3])</span><br></pre></td></tr></table></figure></p></li>
+</ul>
+<p><strong><code>loadImgs()</code></strong></p>
+<ul>
+<li><p>参数：<code>ids</code>：<code>image_id</code>（可选）。</p></li>
+<li><p>返回值：标注文件中对应传入<code>image_id</code>的图像信息列表，如果没有入参返回包含全部图像信息的列表。</p></li>
+<li><p>机制：通过<code>imgs</code>属性实现。</p></li>
+<li><p>示例： <figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">&gt;&gt;&gt; coco.loadImgs(ids=0)</span><br></pre></td></tr></table></figure></p></li>
+</ul>
+<p><strong><code>loadCats()</code></strong></p>
+<ul>
+<li><p>参数：<code>ids</code>：<code>category_id</code>（可选）。</p></li>
+<li><p>返回值：标注文件中对应传入<code>category_id</code>的类别信息列表，如果没有入参返回包含全部类别信息的列表。</p></li>
+<li><p>机制：通过<code>cats</code>属性实现。</p></li>
+<li><p>示例： <figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">&gt;&gt;&gt; coco.loadCats(ids=6)</span><br></pre></td></tr></table></figure></p></li>
+</ul>
+<p><strong><code>annToMask()</code></strong></p>
+<ul>
+<li><p>参数：<code>ann</code>：标注信息字典。</p></li>
+<li><p>返回值：<code>ann['segmentation']</code>中的多边形对应的掩膜，类型为<code>np.ndarray</code></p></li>
+<li><p>示例： <figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">mask = coco.annToMask(coco.anns[<span class="number">0</span>])</span><br></pre></td></tr></table></figure></p></li>
+</ul>
+<h2 id="coco-style数据加载">COCO style数据加载</h2>
+<p>其实加载COCO数据集的过程无非就是运用上述属性和方法获得对应信息的过程，掌握了上述接口加载数据就很简单了。</p>
+<p>由于很多开源代码中都写有COCO的数据加载类，大多数情况下我们无须自己重写，但是在一些特殊情况下需要根据需求重写或修改，个人比较推荐参考YOLACT代码中的<a
+target="_blank" rel="noopener" href="https://github.com/dbolya/yolact/blob/master/data/coco.py">数据加载</a>，因为代码逻辑比较简单清晰。</p>
+<p>这里放一个简单的目标检测数据加载模板：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> cv2</span><br><span class="line"><span class="keyword">import</span> os.path <span class="keyword">as</span> osp</span><br><span class="line"><span class="keyword">import</span> numpy <span class="keyword">as</span> np</span><br><span class="line"></span><br><span class="line"><span class="keyword">class</span> <span class="title class_">COCODataset</span>():</span><br><span class="line">    <span class="string">&quot;&quot;&quot;</span></span><br><span class="line"><span class="string">    COCO style dataset</span></span><br><span class="line"><span class="string">    &quot;&quot;&quot;</span></span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">__init__</span>(<span class="params"></span></span><br><span class="line"><span class="params">        self,</span></span><br><span class="line"><span class="params">        data_dir=<span class="literal">None</span>,</span></span><br><span class="line"><span class="params">        json_file=<span class="string">&quot;coco_train.json&quot;</span>,</span></span><br><span class="line"><span class="params">        name=<span class="string">&quot;train&quot;</span>,</span></span><br><span class="line"><span class="params">        area_threshold=-<span class="number">1</span>,</span></span><br><span class="line"><span class="params">    </span>):</span><br><span class="line">        <span class="string">&quot;&quot;&quot;</span></span><br><span class="line"><span class="string">        Dataset initialization. Annotation data are read into memory by COCO API.</span></span><br><span class="line"><span class="string">        Args:</span></span><br><span class="line"><span class="string">            data_dir (str): dataset root directory</span></span><br><span class="line"><span class="string">            json_file (str): annotation json file name</span></span><br><span class="line"><span class="string">            name (str): data name (e.g. &#x27;train&#x27; or &#x27;val&#x27;)</span></span><br><span class="line"><span class="string">           area_threshold(int): area threshold for object</span></span><br><span class="line"><span class="string">        &quot;&quot;&quot;</span></span><br><span class="line">        self.area_thres = area_threshold</span><br><span class="line">        self.data_dir = data_dir</span><br><span class="line">        self.json_file = json_file</span><br><span class="line">        self.imgs = <span class="literal">None</span></span><br><span class="line">        self.name = name</span><br><span class="line">        self.init()</span><br><span class="line"></span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">init</span>(<span class="params">self</span>):</span><br><span class="line">        <span class="keyword">from</span> pycocotools.coco <span class="keyword">import</span> COCO</span><br><span class="line">        self.coco = COCO(osp.join(self.data_dir, <span class="string">&quot;annotations&quot;</span>, self.json_file))</span><br><span class="line"></span><br><span class="line">        <span class="comment"># <span class="doctag">NOTE:</span> do not use self.coco.getImgIds()</span></span><br><span class="line">        self.ids = <span class="built_in">list</span>(self.coco.imgToAnns.keys()) </span><br><span class="line">        self.class_ids = <span class="built_in">sorted</span>(self.coco.getCatIds())</span><br><span class="line">        self.cats = self.coco.loadCats(self.coco.getCatIds())</span><br><span class="line">        self._classes = <span class="built_in">tuple</span>([c[<span class="string">&quot;name&quot;</span>] <span class="keyword">for</span> c <span class="keyword">in</span> self.cats])</span><br><span class="line"></span><br><span class="line">        self.annotations = self._load_coco_annotations()</span><br><span class="line"></span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">__getitem__</span>(<span class="params">self, index</span>):</span><br><span class="line">        <span class="comment"># <span class="doctag">NOTE:</span> in case empty label</span></span><br><span class="line">        max_iter = <span class="number">5</span></span><br><span class="line">        <span class="keyword">for</span> _ <span class="keyword">in</span> <span class="built_in">range</span>(max_iter):</span><br><span class="line">            res, img_info,  _ = self.annotations[index]</span><br><span class="line">            <span class="keyword">if</span> res.size &gt; <span class="number">0</span>:</span><br><span class="line">                <span class="keyword">break</span></span><br><span class="line">            index = np.random.randint(<span class="number">0</span>, self.__len__())</span><br><span class="line">        id_ = self.ids[index]</span><br><span class="line"></span><br><span class="line">        <span class="keyword">if</span> self.imgs <span class="keyword">is</span> <span class="keyword">not</span> <span class="literal">None</span>:</span><br><span class="line">            pad_img = self.imgs[index]</span><br><span class="line">            img = pad_img[: img_info[<span class="number">0</span>], : img_info[<span class="number">1</span>], :].copy()</span><br><span class="line">        <span class="keyword">else</span>:</span><br><span class="line">            img = self.load_image(index)</span><br><span class="line"></span><br><span class="line">        <span class="keyword">return</span> img, res.copy(), img_info, np.array([id_])</span><br><span class="line"></span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">__len__</span>(<span class="params">self</span>):</span><br><span class="line">        <span class="keyword">return</span> <span class="built_in">len</span>(self.ids)</span><br><span class="line"></span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">_load_coco_annotations</span>(<span class="params">self</span>):</span><br><span class="line">        <span class="keyword">return</span> [self.load_anno_from_ids(_ids) <span class="keyword">for</span> _ids <span class="keyword">in</span> self.ids]</span><br><span class="line"></span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">load_anno_from_ids</span>(<span class="params">self, id_</span>):</span><br><span class="line">        im_ann = self.coco.loadImgs(id_)[<span class="number">0</span>]</span><br><span class="line">        width = im_ann[<span class="string">&quot;width&quot;</span>]</span><br><span class="line">        height = im_ann[<span class="string">&quot;height&quot;</span>]</span><br><span class="line">        anno_ids = self.coco.getAnnIds(imgIds=[<span class="built_in">int</span>(id_)], iscrowd=<span class="literal">False</span>)</span><br><span class="line">        annotations = self.coco.loadAnns(anno_ids)</span><br><span class="line">        objs = []</span><br><span class="line">        <span class="keyword">for</span> obj <span class="keyword">in</span> annotations:</span><br><span class="line">            x1 = np.<span class="built_in">max</span>((<span class="number">0</span>, obj[<span class="string">&quot;bbox&quot;</span>][<span class="number">0</span>]))</span><br><span class="line">            y1 = np.<span class="built_in">max</span>((<span class="number">0</span>, obj[<span class="string">&quot;bbox&quot;</span>][<span class="number">1</span>]))</span><br><span class="line">            x2 = np.<span class="built_in">min</span>((width, x1 + np.<span class="built_in">max</span>((<span class="number">0</span>, obj[<span class="string">&quot;bbox&quot;</span>][<span class="number">2</span>]))))</span><br><span class="line">            y2 = np.<span class="built_in">min</span>((height, y1 + np.<span class="built_in">max</span>((<span class="number">0</span>, obj[<span class="string">&quot;bbox&quot;</span>][<span class="number">3</span>]))))</span><br><span class="line">            <span class="comment"># <span class="doctag">NOTE:</span> we filter the small object, which is different from the super method</span></span><br><span class="line">            area_thres = <span class="built_in">max</span>(self.area_thres, <span class="number">0</span>)</span><br><span class="line">            <span class="keyword">if</span> obj[<span class="string">&quot;area&quot;</span>] &gt; area_thres <span class="keyword">and</span> x2 &gt;= x1 <span class="keyword">and</span> y2 &gt;= y1:</span><br><span class="line">                obj[<span class="string">&quot;clean_bbox&quot;</span>] = [x1, y1, x2, y2]</span><br><span class="line">                objs.append(obj)</span><br><span class="line"></span><br><span class="line">        num_objs = <span class="built_in">len</span>(objs)</span><br><span class="line"></span><br><span class="line">        res = np.zeros((num_objs, <span class="number">5</span>))</span><br><span class="line"></span><br><span class="line">        <span class="keyword">for</span> ix, obj <span class="keyword">in</span> <span class="built_in">enumerate</span>(objs):</span><br><span class="line">            cls = self.class_ids.index(obj[<span class="string">&quot;category_id&quot;</span>])</span><br><span class="line">            res[ix, <span class="number">0</span>:<span class="number">4</span>] = obj[<span class="string">&quot;clean_bbox&quot;</span>]</span><br><span class="line">            res[ix, <span class="number">4</span>] = cls</span><br><span class="line"></span><br><span class="line">        img_info = (height, width)</span><br><span class="line">        file_name = (</span><br><span class="line">            im_ann[<span class="string">&quot;file_name&quot;</span>]</span><br><span class="line">            <span class="keyword">if</span> <span class="string">&quot;file_name&quot;</span> <span class="keyword">in</span> im_ann</span><br><span class="line">            <span class="keyword">else</span> <span class="string">&quot;&#123;:012&#125;&quot;</span>.<span class="built_in">format</span>(id_) + <span class="string">&quot;.jpg&quot;</span></span><br><span class="line">        )</span><br><span class="line"></span><br><span class="line">        <span class="keyword">return</span> (res, img_info, file_name)</span><br><span class="line"></span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">load_image</span>(<span class="params">self, index</span>):</span><br><span class="line">        file_name = self.annotations[index][-<span class="number">1</span>]</span><br><span class="line">        <span class="keyword">assert</span> osp.exists(file_name), <span class="string">f&quot;file named <span class="subst">&#123;file_name&#125;</span> not found&quot;</span></span><br><span class="line">        img = cv2.imread(file_name)</span><br><span class="line"></span><br><span class="line">        <span class="keyword">return</span> img</span><br></pre></td></tr></table></figure>
+<p>至此，深入探究COCO数据集标签这一专题就结束了，COCO数据集被广泛使用于检测和分割领域，即使我们不直接使用COCO数据集本身，掌握其标签格式进而能够创建和加载自己的COCO
+style数据集在使用相关模型的时候也很有益。希望本专题能抛砖引玉，给读者提供一些参考。</p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="https://venquieu.github.io/posts/coco-dataset-label-3/" data-id="clwnalu2h000ej8159emaeads" data-title="深入探究COCO数据集（三）" class="article-share-link"><span class="fa fa-share">Share</span></a>
+      
+      
+      
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/%E6%95%B0%E6%8D%AE%E9%9B%86/" rel="tag">数据集</a></li></ul>
+
+    </footer>
+  </div>
+  
+    
+<nav id="article-nav">
+  
+    <a href="/posts/resnet-residual-block/" id="article-nav-newer" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Newer</strong>
+      <div class="article-nav-title">
+        
+          ResNet残差块详解
+        
+      </div>
+    </a>
+  
+  
+    <a href="/posts/coco-dataset-label-2/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Older</strong>
+      <div class="article-nav-title">深入探究COCO数据集（二）</div>
+    </a>
+  
+</nav>
+
+  
+</article>
+
+
+</section>
+        
+          <aside id="sidebar">
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Categories</h3>
+    <div class="widget">
+      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/%E6%A8%A1%E5%9E%8B%E7%BB%93%E6%9E%84%E8%AE%BE%E8%AE%A1/">模型结构设计</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E6%B7%B1%E5%BA%A6%E5%AD%A6%E4%B9%A0/">深度学习</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E6%B7%B1%E5%BA%A6%E5%AD%A6%E4%B9%A0%E6%A8%A1%E5%9E%8B%E9%83%A8%E7%BD%B2/">深度学习模型部署</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E7%BC%96%E7%A8%8B%E8%AF%AD%E8%A8%80/">编程语言</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tags</h3>
+    <div class="widget">
+      <ul class="tag-list" itemprop="keywords"><li class="tag-list-item"><a class="tag-list-link" href="/tags/Hexo/" rel="tag">Hexo</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/pyTorch/" rel="tag">pyTorch</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/python/" rel="tag">python</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/review/" rel="tag">review</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E6%95%B0%E6%8D%AE%E9%9B%86/" rel="tag">数据集</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E8%AE%BA%E6%96%87/" rel="tag">论文</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tag Cloud</h3>
+    <div class="widget tagcloud">
+      <a href="/tags/Hexo/" style="font-size: 10px;">Hexo</a> <a href="/tags/pyTorch/" style="font-size: 10px;">pyTorch</a> <a href="/tags/python/" style="font-size: 20px;">python</a> <a href="/tags/review/" style="font-size: 10px;">review</a> <a href="/tags/%E6%95%B0%E6%8D%AE%E9%9B%86/" style="font-size: 15px;">数据集</a> <a href="/tags/%E8%AE%BA%E6%96%87/" style="font-size: 10px;">论文</a>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Archives</h3>
+    <div class="widget">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2024/05/">May 2024</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2024/04/">April 2024</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2024/03/">March 2024</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/03/">March 2023</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/02/">February 2023</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/12/">December 2022</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/10/">October 2022</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/08/">August 2022</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/07/">July 2022</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Recent Posts</h3>
+    <div class="widget">
+      <ul>
+        
+          <li>
+            <a href="/posts/FastInst/">FastInst: A Simple Query-Based Model for Real-Time Instance Segmentation</a>
+          </li>
+        
+          <li>
+            <a href="/posts/240406-Summary/">关于深度学习的一些总结</a>
+          </li>
+        
+          <li>
+            <a href="/posts/Config-GitHub-Pages-with-Hexo">使用Hexo搭建GitHub博客</a>
+          </li>
+        
+          <li>
+            <a href="/posts/hello-world/">Hello World</a>
+          </li>
+        
+          <li>
+            <a href="/posts/pytorch-model-to-onnx/">pyTorch模型转onnx</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+
+  
+</aside>
+        
+      </div>
+      <footer id="footer">
+  
+  <div class="outer">
+    <div id="footer-info" class="inner">
+      
+      &copy; 2024 Venturi Li<br>
+      Powered by <a href="https://hexo.io/" target="_blank">Hexo</a>
+    </div>
+  </div>
+</footer>
+
+    </div>
+    <nav id="mobile-nav">
+  
+    <a href="/" class="mobile-nav-link">Home</a>
+  
+    <a href="/archives" class="mobile-nav-link">Archives</a>
+  
+</nav>
+    
+
+
+<script src="/js/jquery-3.6.4.min.js"></script>
+
+
+
+  
+<script src="/fancybox/jquery.fancybox.min.js"></script>
+
+
+
+
+<script src="/js/script.js"></script>
+
+
+
+
+
+  </div>
+</body>
+</html>

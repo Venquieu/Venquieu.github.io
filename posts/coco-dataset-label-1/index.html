@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  
+  <title>深入探究COCO数据集（一） | Venturi Li&#39;s Space</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <meta name="description" content="COCO数据集是目标检测和实例分割领域的经典数据集，从事相关领域自然免不了与其打交道。网上对于COCO数据集的介绍已经很多，这里不再赘述。本部分主要从标签的角度探究一下COCO数据集的检测部分，由于内容较多，我将其整理为一个专题，分为三个部分，分别是： 深入探究COCO数据集（一）——COCO标签格式 深入探究COCO数据集（二）——制作COCO style的数据集 深入探究COCO数据集">
+<meta property="og:type" content="article">
+<meta property="og:title" content="深入探究COCO数据集（一）">
+<meta property="og:url" content="https://venquieu.github.io/posts/coco-dataset-label-1/index.html">
+<meta property="og:site_name" content="Venturi Li&#39;s Space">
+<meta property="og:description" content="COCO数据集是目标检测和实例分割领域的经典数据集，从事相关领域自然免不了与其打交道。网上对于COCO数据集的介绍已经很多，这里不再赘述。本部分主要从标签的角度探究一下COCO数据集的检测部分，由于内容较多，我将其整理为一个专题，分为三个部分，分别是： 深入探究COCO数据集（一）——COCO标签格式 深入探究COCO数据集（二）——制作COCO style的数据集 深入探究COCO数据集">
+<meta property="og:locale" content="en_US">
+<meta property="article:published_time" content="2022-07-31T09:37:51.000Z">
+<meta property="article:modified_time" content="2024-05-26T02:41:30.079Z">
+<meta property="article:author" content="Venturi Li">
+<meta property="article:tag" content="数据集">
+<meta name="twitter:card" content="summary">
+  
+    <link rel="alternate" href="/atom.xml" title="Venturi Li's Space" type="application/atom+xml">
+  
+  
+    <link rel="shortcut icon" href="/favicon.png">
+  
+  
+  
+<link rel="stylesheet" href="/css/style.css">
+
+  
+    
+<link rel="stylesheet" href="/fancybox/jquery.fancybox.min.css">
+
+  
+  
+<meta name="generator" content="Hexo 7.1.1"></head>
+
+<body>
+  <div id="container">
+    <div id="wrap">
+      <header id="header">
+  <div id="banner"></div>
+  <div id="header-outer" class="outer">
+    <div id="header-title" class="inner">
+      <h1 id="logo-wrap">
+        <a href="/" id="logo">Venturi Li&#39;s Space</a>
+      </h1>
+      
+    </div>
+    <div id="header-inner" class="inner">
+      <nav id="main-nav">
+        <a id="main-nav-toggle" class="nav-icon"><span class="fa fa-bars"></span></a>
+        
+          <a class="main-nav-link" href="/">Home</a>
+        
+          <a class="main-nav-link" href="/archives">Archives</a>
+        
+      </nav>
+      <nav id="sub-nav">
+        
+        
+          <a class="nav-icon" href="/atom.xml" title="RSS Feed"><span class="fa fa-rss"></span></a>
+        
+        <a class="nav-icon nav-search-btn" title="Search"><span class="fa fa-search"></span></a>
+      </nav>
+      <div id="search-form-wrap">
+        <form action="//google.com/search" method="get" accept-charset="UTF-8" class="search-form"><input type="search" name="q" class="search-form-input" placeholder="Search"><button type="submit" class="search-form-submit">&#xF002;</button><input type="hidden" name="sitesearch" value="https://venquieu.github.io"></form>
+      </div>
+    </div>
+  </div>
+</header>
+
+      <div class="outer">
+        <section id="main"><article id="post-coco-dataset-label-1" class="h-entry article article-type-post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
+  <div class="article-meta">
+    <a href="/posts/coco-dataset-label-1/" class="article-date">
+  <time class="dt-published" datetime="2022-07-31T09:37:51.000Z" itemprop="datePublished">2022-07-31</time>
+</a>
+    
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/%E6%B7%B1%E5%BA%A6%E5%AD%A6%E4%B9%A0/">深度学习</a>
+  </div>
+
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="p-name article-title" itemprop="headline name">
+      深入探究COCO数据集（一）
+    </h1>
+  
+
+      </header>
+    
+    <div class="e-content article-entry" itemprop="articleBody">
+      
+        <p>COCO数据集是目标检测和实例分割领域的经典数据集，从事相关领域自然免不了与其打交道。网上对于COCO数据集的介绍已经很多，这里不再赘述。本部分主要从标签的角度探究一下COCO数据集的检测部分，由于内容较多，我将其整理为一个专题，分为三个部分，分别是：</p>
+<p><a
+href="https://venquieu.github.io/2022/07/31/coco-dataset-label-1/">深入探究COCO数据集（一）</a>——COCO标签格式</p>
+<p><a
+href="https://venquieu.github.io/2022/08/06/coco-dataset-label-2/">深入探究COCO数据集（二）</a>——制作COCO
+style的数据集</p>
+<p><a
+href="https://venquieu.github.io/2022/08/06/coco-dataset-label-3/">深入探究COCO数据集（三）</a>——加载数据集</p>
+<p>本节是专题的第一部分，主要分析讲解一下COCO数据集的标签格式。</p>
+<h2 id="coco标签格式">COCO标签格式</h2>
+<p>COCO标签以json文件的形式存储，整个标签文件可以视为一个字典，其中有5个键值对，键（key）分别是<code>info</code>、<code>licenses</code>、<code>categories</code>、<code>images</code>和<code>annotations</code>。</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">annotation</span><br><span class="line">├──info</span><br><span class="line">├──licenses</span><br><span class="line">├──categories</span><br><span class="line">├──images</span><br><span class="line">└──annotations</span><br></pre></td></tr></table></figure>
+<p><strong><code>info</code></strong>提供数据集的一些信息，如<code>contributor</code>、<code>description</code>等。</p>
+<p><code>licenses</code>提供数据集使用的许可证。</p>
+<p><code>info</code>和<code>licenses</code>并不提供数据集标签的重要信息。在<code>val2017</code>中这两项的值为（<code>licenses</code>仅列出部分）：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># info</span></span><br><span class="line"><span class="string">&quot;info&quot;</span>: &#123;</span><br><span class="line">    <span class="string">&quot;description&quot;</span>: <span class="string">&quot;COCO 2017 Dataset&quot;</span>,</span><br><span class="line">    <span class="string">&quot;url&quot;</span>: <span class="string">&quot;http://cocodataset.org&quot;</span>,</span><br><span class="line">    <span class="string">&quot;version&quot;</span>: <span class="string">&quot;1.0&quot;</span>,</span><br><span class="line">    <span class="string">&quot;year&quot;</span>: <span class="number">2017</span>,</span><br><span class="line">    <span class="string">&quot;contributor&quot;</span>: <span class="string">&quot;COCO Consortium&quot;</span>,</span><br><span class="line">    <span class="string">&quot;date_created&quot;</span>: <span class="string">&quot;2017/09/01&quot;</span></span><br><span class="line">&#125;</span><br><span class="line"><span class="comment"># licenses</span></span><br><span class="line"><span class="string">&quot;licenses&quot;</span>: [</span><br><span class="line">     &#123;</span><br><span class="line">         <span class="string">&quot;url&quot;</span>: <span class="string">&quot;http://creativecommons.org/licenses/by-nc-sa/2.0/&quot;</span>,</span><br><span class="line">         <span class="string">&quot;id&quot;</span>: <span class="number">1</span>,</span><br><span class="line">         <span class="string">&quot;name&quot;</span>: <span class="string">&quot;Attribution-NonCommercial-ShareAlike License&quot;</span></span><br><span class="line">     &#125;,</span><br><span class="line">     <span class="comment"># ......</span></span><br><span class="line">     &#123;</span><br><span class="line">         <span class="string">&quot;url&quot;</span>: <span class="string">&quot;http://www.usa.gov/copyright.shtml&quot;</span>,</span><br><span class="line">         <span class="string">&quot;id&quot;</span>: <span class="number">8</span>,</span><br><span class="line">         <span class="string">&quot;name&quot;</span>: <span class="string">&quot;United States Government Work&quot;</span></span><br><span class="line">     &#125;</span><br><span class="line">]</span><br></pre></td></tr></table></figure>
+<p><code>categories</code>是一个列表，提供数据集每一个类的类别信息。每一类用列表中的一个字典表示，字典键值对有唯一类别索引<code>id</code>，类别名称<code>name</code>和类别父类<code>supercategory</code>。</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="string">&quot;categories&quot;</span>: [</span><br><span class="line">    &#123;<span class="string">&quot;supercategory&quot;</span>: <span class="string">&quot;person&quot;</span>, <span class="string">&quot;id&quot;</span>: <span class="number">1</span>, <span class="string">&quot;name&quot;</span>: <span class="string">&quot;person&quot;</span>&#125;,</span><br><span class="line">    <span class="comment"># ......</span></span><br><span class="line">    &#123;<span class="string">&quot;supercategory&quot;</span>: <span class="string">&quot;indoor&quot;</span>, <span class="string">&quot;id&quot;</span>: <span class="number">90</span>, <span class="string">&quot;name&quot;</span>: <span class="string">&quot;toothbrush&quot;</span>&#125;</span><br><span class="line">]</span><br></pre></td></tr></table></figure>
+<p><code>images</code>是一个列表，提供数据集中全部图像的信息，列表中每一项是一个字典，代表一张图像信息。字典中比较重要的键是图像文件名<code>file_name</code>、图像高度<code>height</code>、图像宽度<code>width</code>以及唯一图像索引<code>id</code>。</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="string">&quot;images&quot;</span>: [</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="string">&quot;license&quot;</span>: <span class="number">4</span>,</span><br><span class="line">        <span class="string">&quot;file_name&quot;</span>: <span class="string">&quot;000000397133.jpg&quot;</span>,</span><br><span class="line">        <span class="string">&quot;coco_url&quot;</span>: <span class="string">&quot;http://images.cocodataset.org/val2017/000000397133.jpg&quot;</span>,</span><br><span class="line">        <span class="string">&quot;height&quot;</span>: <span class="number">427</span>,</span><br><span class="line">        <span class="string">&quot;width&quot;</span>: <span class="number">640</span>,</span><br><span class="line">        <span class="string">&quot;date_captured&quot;</span>: <span class="string">&quot;2013-11-14 17:02:52&quot;</span>,</span><br><span class="line">        <span class="string">&quot;flickr_url&quot;</span>: <span class="string">&quot;http://farm7.staticflickr.com/6116/6255196340_da26cf2c9e_z.jpg&quot;</span>,</span><br><span class="line">        <span class="string">&quot;id&quot;</span>: <span class="number">397133</span></span><br><span class="line">    &#125;,</span><br><span class="line">    <span class="comment"># ......</span></span><br><span class="line">]</span><br></pre></td></tr></table></figure>
+<p><code>annotations</code>也是一个列表，提供数据集中图像对应的标签信息，列表中每一项是一个字典，对应于一个标签。字典中的键分别为：</p>
+<ul>
+<li><code>segmentation</code>：每个实例的轮廓顶点，值是二维列表，这主要是考虑到物体存在被截断的情况。其形式为<span
+class="math inline">\([[x^1_1, y^1_1, x^1_2, y^1_2, ... x^1_m, y^1_m],
+..., [x^k_1, y^k_1, x^k_2, y^k_2, ... x^k_n,
+y^k_n]]\)</span>，这表示该实例由<code>k</code>个截断的区域构成，每个区域的轮廓顶点表示为一个一维列表。此外，<code>x</code>表示宽度方向，<code>y</code>表示高度方向。</li>
+<li><code>area</code>：实例轮廓包围区域的面积</li>
+<li><code>bbox</code>：实例对应的最小边界矩形框，是一个以<code>xywh</code>形式存储的列表，四个值分别表示边界框左上角坐标、宽度和高度</li>
+<li><code>image_id</code>：该标签对应的图像索引号，该索引对应于<code>images</code>项中的<code>id</code></li>
+<li><code>category_id</code>：该标签对应的类别索引号，该索引号对应于<code>categories</code>项中的<code>id</code></li>
+<li><code>id</code>：唯一标注索引</li>
+<li><code>iscrowd</code>：是否密集标注</li>
+</ul>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="string">&quot;annotations&quot;</span>: [</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="string">&quot;segmentation&quot;</span>: [[<span class="number">363.0</span>,<span class="number">213.11</span>,<span class="number">561.69</span>,<span class="number">164.4</span>,<span class="number">640.0</span>,<span class="number">142.43</span>,<span class="number">640.0</span>,<span class="number">301.0</span>,<span class="number">356.31</span>,<span class="number">240.82</span>]],</span><br><span class="line">        <span class="string">&quot;area&quot;</span>: <span class="number">25818.402449999994</span>,</span><br><span class="line">        <span class="string">&quot;iscrowd&quot;</span>: <span class="number">0</span>,</span><br><span class="line">        <span class="string">&quot;image_id&quot;</span>: <span class="number">25181</span>,</span><br><span class="line">        <span class="string">&quot;bbox&quot;</span>: [<span class="number">356.31</span>,<span class="number">142.43</span>,<span class="number">283.69</span>,<span class="number">158.57</span>],</span><br><span class="line">        <span class="string">&quot;category_id&quot;</span>: <span class="number">7</span>,</span><br><span class="line">        <span class="string">&quot;id&quot;</span>: <span class="number">173761</span></span><br><span class="line">    &#125;,</span><br><span class="line">]</span><br></pre></td></tr></table></figure>
+<h2 id="ididid......">id，id，id......</h2>
+<p>在COCO标签中，<code>categories</code>项、<code>images</code>项和<code>annotations</code>项中都有名为<code>id</code>的键，此外还有<code>image_id</code>和<code>category_id</code>,初看很容易搞混。然而区分这几个<code>id</code>的不同对于理解COCO标签非常必要，上边其实已经说过了，这里再放在一起集中说一下。</p>
+<p>首先，每一项中的<code>id</code>都相当于“身份证”，是一个内容（类别、图像或标签）的唯一标识，给一个<code>id</code>就能找到对应的内容。如在<code>categories</code>中就是类别的唯一标识、在<code>images</code>中就是图像的唯一索引、在<code>annotations</code>中就是标签的唯一索引。</p>
+<p>其次，<code>image_id</code>和<code>category_id</code>仅在<code>annotations</code>中出现，<code>image_id</code>标识出这个标签是哪张图像的标签，<code>category_id</code>则标识出这个标签对应于哪个类别。</p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="https://venquieu.github.io/posts/coco-dataset-label-1/" data-id="clwnalu2e0008j81518ile7w9" data-title="深入探究COCO数据集（一）" class="article-share-link"><span class="fa fa-share">Share</span></a>
+      
+      
+      
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/%E6%95%B0%E6%8D%AE%E9%9B%86/" rel="tag">数据集</a></li></ul>
+
+    </footer>
+  </div>
+  
+    
+<nav id="article-nav">
+  
+    <a href="/posts/coco-dataset-label-2/" id="article-nav-newer" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Newer</strong>
+      <div class="article-nav-title">
+        
+          深入探究COCO数据集（二）
+        
+      </div>
+    </a>
+  
+  
+    <a href="/posts/python-import-method/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Older</strong>
+      <div class="article-nav-title">python import导入</div>
+    </a>
+  
+</nav>
+
+  
+</article>
+
+
+</section>
+        
+          <aside id="sidebar">
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Categories</h3>
+    <div class="widget">
+      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/%E6%A8%A1%E5%9E%8B%E7%BB%93%E6%9E%84%E8%AE%BE%E8%AE%A1/">模型结构设计</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E6%B7%B1%E5%BA%A6%E5%AD%A6%E4%B9%A0/">深度学习</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E6%B7%B1%E5%BA%A6%E5%AD%A6%E4%B9%A0%E6%A8%A1%E5%9E%8B%E9%83%A8%E7%BD%B2/">深度学习模型部署</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E7%BC%96%E7%A8%8B%E8%AF%AD%E8%A8%80/">编程语言</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tags</h3>
+    <div class="widget">
+      <ul class="tag-list" itemprop="keywords"><li class="tag-list-item"><a class="tag-list-link" href="/tags/Hexo/" rel="tag">Hexo</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/pyTorch/" rel="tag">pyTorch</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/python/" rel="tag">python</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/review/" rel="tag">review</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E6%95%B0%E6%8D%AE%E9%9B%86/" rel="tag">数据集</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E8%AE%BA%E6%96%87/" rel="tag">论文</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tag Cloud</h3>
+    <div class="widget tagcloud">
+      <a href="/tags/Hexo/" style="font-size: 10px;">Hexo</a> <a href="/tags/pyTorch/" style="font-size: 10px;">pyTorch</a> <a href="/tags/python/" style="font-size: 20px;">python</a> <a href="/tags/review/" style="font-size: 10px;">review</a> <a href="/tags/%E6%95%B0%E6%8D%AE%E9%9B%86/" style="font-size: 15px;">数据集</a> <a href="/tags/%E8%AE%BA%E6%96%87/" style="font-size: 10px;">论文</a>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Archives</h3>
+    <div class="widget">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2024/05/">May 2024</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2024/04/">April 2024</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2024/03/">March 2024</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/03/">March 2023</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/02/">February 2023</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/12/">December 2022</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/10/">October 2022</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/08/">August 2022</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/07/">July 2022</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Recent Posts</h3>
+    <div class="widget">
+      <ul>
+        
+          <li>
+            <a href="/posts/FastInst/">FastInst: A Simple Query-Based Model for Real-Time Instance Segmentation</a>
+          </li>
+        
+          <li>
+            <a href="/posts/240406-Summary/">关于深度学习的一些总结</a>
+          </li>
+        
+          <li>
+            <a href="/posts/Config-GitHub-Pages-with-Hexo">使用Hexo搭建GitHub博客</a>
+          </li>
+        
+          <li>
+            <a href="/posts/hello-world/">Hello World</a>
+          </li>
+        
+          <li>
+            <a href="/posts/pytorch-model-to-onnx/">pyTorch模型转onnx</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+
+  
+</aside>
+        
+      </div>
+      <footer id="footer">
+  
+  <div class="outer">
+    <div id="footer-info" class="inner">
+      
+      &copy; 2024 Venturi Li<br>
+      Powered by <a href="https://hexo.io/" target="_blank">Hexo</a>
+    </div>
+  </div>
+</footer>
+
+    </div>
+    <nav id="mobile-nav">
+  
+    <a href="/" class="mobile-nav-link">Home</a>
+  
+    <a href="/archives" class="mobile-nav-link">Archives</a>
+  
+</nav>
+    
+
+
+<script src="/js/jquery-3.6.4.min.js"></script>
+
+
+
+  
+<script src="/fancybox/jquery.fancybox.min.js"></script>
+
+
+
+
+<script src="/js/script.js"></script>
+
+
+
+
+
+  </div>
+</body>
+</html>

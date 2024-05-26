@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  
+  <title>python实现文件锁 | Venturi Li&#39;s Space</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <meta name="description" content="之前写过一篇用python实现多进程与多线程的文章，在使用多进程或者多线程的情况下，使用锁来实现互斥以避免同时对资源执行读和写就成为一个不可避免的事情。 对于一般的变量资源来说实现互斥锁很简单，使用multiprocessing.Lock类或者threading.Lock即可。但是如果我们要实现互斥的是文件呢？  写这篇文章的初衷是我没有找到现成的库可以用，所以特意自己写了一个想贴出来。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="python实现文件锁">
+<meta property="og:url" content="https://venquieu.github.io/posts/python-file-lock/index.html">
+<meta property="og:site_name" content="Venturi Li&#39;s Space">
+<meta property="og:description" content="之前写过一篇用python实现多进程与多线程的文章，在使用多进程或者多线程的情况下，使用锁来实现互斥以避免同时对资源执行读和写就成为一个不可避免的事情。 对于一般的变量资源来说实现互斥锁很简单，使用multiprocessing.Lock类或者threading.Lock即可。但是如果我们要实现互斥的是文件呢？  写这篇文章的初衷是我没有找到现成的库可以用，所以特意自己写了一个想贴出来。">
+<meta property="og:locale" content="en_US">
+<meta property="og:image" content="https://venquieu.github.io/posts/assets/2023/02/file_lock_result.jpg">
+<meta property="article:published_time" content="2023-02-19T06:00:38.000Z">
+<meta property="article:modified_time" content="2024-03-31T10:04:34.858Z">
+<meta property="article:author" content="Venturi Li">
+<meta property="article:tag" content="python">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://venquieu.github.io/posts/assets/2023/02/file_lock_result.jpg">
+  
+    <link rel="alternate" href="/atom.xml" title="Venturi Li's Space" type="application/atom+xml">
+  
+  
+    <link rel="shortcut icon" href="/favicon.png">
+  
+  
+  
+<link rel="stylesheet" href="/css/style.css">
+
+  
+    
+<link rel="stylesheet" href="/fancybox/jquery.fancybox.min.css">
+
+  
+  
+<meta name="generator" content="Hexo 7.1.1"></head>
+
+<body>
+  <div id="container">
+    <div id="wrap">
+      <header id="header">
+  <div id="banner"></div>
+  <div id="header-outer" class="outer">
+    <div id="header-title" class="inner">
+      <h1 id="logo-wrap">
+        <a href="/" id="logo">Venturi Li&#39;s Space</a>
+      </h1>
+      
+    </div>
+    <div id="header-inner" class="inner">
+      <nav id="main-nav">
+        <a id="main-nav-toggle" class="nav-icon"><span class="fa fa-bars"></span></a>
+        
+          <a class="main-nav-link" href="/">Home</a>
+        
+          <a class="main-nav-link" href="/archives">Archives</a>
+        
+      </nav>
+      <nav id="sub-nav">
+        
+        
+          <a class="nav-icon" href="/atom.xml" title="RSS Feed"><span class="fa fa-rss"></span></a>
+        
+        <a class="nav-icon nav-search-btn" title="Search"><span class="fa fa-search"></span></a>
+      </nav>
+      <div id="search-form-wrap">
+        <form action="//google.com/search" method="get" accept-charset="UTF-8" class="search-form"><input type="search" name="q" class="search-form-input" placeholder="Search"><button type="submit" class="search-form-submit">&#xF002;</button><input type="hidden" name="sitesearch" value="https://venquieu.github.io"></form>
+      </div>
+    </div>
+  </div>
+</header>
+
+      <div class="outer">
+        <section id="main"><article id="post-python-file-lock" class="h-entry article article-type-post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
+  <div class="article-meta">
+    <a href="/posts/python-file-lock/" class="article-date">
+  <time class="dt-published" datetime="2023-02-19T06:00:38.000Z" itemprop="datePublished">2023-02-19</time>
+</a>
+    
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/%E7%BC%96%E7%A8%8B%E8%AF%AD%E8%A8%80/">编程语言</a>
+  </div>
+
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="p-name article-title" itemprop="headline name">
+      python实现文件锁
+    </h1>
+  
+
+      </header>
+    
+    <div class="e-content article-entry" itemprop="articleBody">
+      
+        <blockquote>
+<p>之前写过一篇用<a
+target="_blank" rel="noopener" href="http://localhost/wordpress/index.php/2022/12/04/python_threads_processes">python实现多进程与多线程</a>的文章，在使用多进程或者多线程的情况下，使用锁来实现互斥以避免同时对资源执行读和写就成为一个不可避免的事情。
+对于一般的变量资源来说实现互斥锁很简单，使用<code>multiprocessing.Lock</code>类或者<code>threading.Lock</code>即可。但是如果我们要实现互斥的是文件呢？</p>
+</blockquote>
+<p>写这篇文章的初衷是我没有找到现成的库可以用，所以特意自己写了一个想贴出来。但是写到一半的时候发现了<code>filelock</code>库可以解决这个问题，使用起来要比自己写的更好一些。索性就把原来写的全都删了，分享一下用<code>filelock</code>实现文件锁的方法。</p>
+<h2 id="安装">安装</h2>
+<p>使用pip或者conda等安装filelock即可。</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">pip install filelock</span><br></pre></td></tr></table></figure>
+<h2 id="使用">使用</h2>
+<p>这里将介绍一下用<code>filelock</code>模块实现文件锁的基本用法。</p>
+<p><strong>导入接口</strong></p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">from filelock import FileLock</span><br></pre></td></tr></table></figure>
+<p><strong>文件和锁文件</strong></p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">file = &quot;file.txt&quot;</span><br><span class="line">lockfile = file + &quot;.lock&quot;</span><br></pre></td></tr></table></figure>
+<p>这里的文件<code>file</code>是我们要实现互斥锁定的文件。
+锁文件<code>lockfile</code>用于确定是否允许进程或者线程访问该文件，具体机制我们可以不必关心，能够正确创建的使用就可以了。</p>
+<p><strong>实例化锁对象</strong></p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">lock = FileLock(lockfile)</span><br></pre></td></tr></table></figure>
+<p>实例化出来一个锁对象<code>lock</code>，注意这里的参数是锁文件<code>lockfile</code>而不是文件<code>file</code>。
+<code>lock</code>在上锁的时候，如果文件已经被其他对象上了锁，那么将一直等待到文件被其他对象释放锁后再上锁。如果不想在获取不到锁的时候永远等待下去，可以如下实例化锁对象：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">lock = FileLock(lockfile, timeout = 5)</span><br></pre></td></tr></table></figure>
+<p>这时，<code>lock</code>在上锁的时候，如果文件已经被其他对象上了锁，那么在5秒内如果文件被其他对象释放锁，<code>lock</code>会对其上锁；否则就会因超时而报错退出。</p>
+<p><strong>锁的获取和释放</strong></p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">lock.acquire()</span><br><span class="line"># do something...</span><br><span class="line">lock.release()</span><br></pre></td></tr></table></figure>
+<p>使用方法很直观，<code>acquire()</code>方法用于获取锁，<code>release()</code>方法用于释放锁。</p>
+<p><strong>完整代码</strong></p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">from</span> filelock <span class="keyword">import</span> FileLock</span><br><span class="line"></span><br><span class="line">file = <span class="string">&quot;file.txt&quot;</span></span><br><span class="line">lockfile = file + <span class="string">&quot;.lock&quot;</span></span><br><span class="line"></span><br><span class="line">lock = FileLock(lockfile)</span><br><span class="line">lock.acquire()</span><br><span class="line"><span class="keyword">try</span>:</span><br><span class="line">    <span class="built_in">print</span>(<span class="string">&quot;acquire the lock!&quot;</span>)</span><br><span class="line">    <span class="comment"># do something to the file...</span></span><br><span class="line"><span class="keyword">finally</span>:</span><br><span class="line">    lock.release()</span><br><span class="line">    <span class="built_in">print</span>(<span class="string">&quot;release the lock!&quot;</span>)</span><br></pre></td></tr></table></figure>
+<h2 id="例子">例子</h2>
+<p>这里，我们将分别跑两个相同的脚本<code>main1.py</code>和<code>main2.py</code>以模拟多进程，这两个脚本均试图排他的获取文件<code>file.txt</code>。
+<code>main1.py</code>和<code>main2.py</code>中的内容：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line">import time</span><br><span class="line">from filelock import FileLock</span><br><span class="line"></span><br><span class="line">file = &quot;file.txt&quot;</span><br><span class="line">lockfile = &quot;file.txt.lock&quot;</span><br><span class="line"></span><br><span class="line">lock = FileLock(lockfile)</span><br><span class="line"></span><br><span class="line">lock.acquire()</span><br><span class="line">try:</span><br><span class="line">    # do something to the file...</span><br><span class="line">    time_now = time.strftime(&#x27;%H:%M:%S&#x27;, time.localtime())</span><br><span class="line">    print(time_now + &quot;: acquire the lock!&quot;)</span><br><span class="line">    time.sleep(5)</span><br><span class="line">finally:</span><br><span class="line">    lock.release()</span><br><span class="line">    time_now = time.strftime(&#x27;%H:%M:%S&#x27;, time.localtime())</span><br><span class="line">    print(time_now + &quot;: release the lock!&quot;)</span><br></pre></td></tr></table></figure>
+<p>先后将<code>main1.py</code>和<code>main2.py</code>跑起来，输出如下：
+<img src="../assets/2023/02/file_lock_result.jpg"
+alt="file_lock_result" /></p>
+<p>显然，<code>main1.py</code>先完成了对文件上锁，<code>main2.py</code>就一直处于等待中，一直到<code>main1.py</code>释放了锁，<code>main2.py</code>实现了文件上锁，从而实现了对文件的互斥性访问。</p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="https://venquieu.github.io/posts/python-file-lock/" data-id="clwnalu2j000jj8156b8feiaq" data-title="python实现文件锁" class="article-share-link"><span class="fa fa-share">Share</span></a>
+      
+      
+      
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/python/" rel="tag">python</a></li></ul>
+
+    </footer>
+  </div>
+  
+    
+<nav id="article-nav">
+  
+    <a href="/posts/pytorch-model-to-torchscript/" id="article-nav-newer" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Newer</strong>
+      <div class="article-nav-title">
+        
+          pyTorch模型转torchscript
+        
+      </div>
+    </a>
+  
+  
+    <a href="/posts/python-threads-processes/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Older</strong>
+      <div class="article-nav-title">python多进程与多线程</div>
+    </a>
+  
+</nav>
+
+  
+</article>
+
+
+</section>
+        
+          <aside id="sidebar">
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Categories</h3>
+    <div class="widget">
+      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/%E6%A8%A1%E5%9E%8B%E7%BB%93%E6%9E%84%E8%AE%BE%E8%AE%A1/">模型结构设计</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E6%B7%B1%E5%BA%A6%E5%AD%A6%E4%B9%A0/">深度学习</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E6%B7%B1%E5%BA%A6%E5%AD%A6%E4%B9%A0%E6%A8%A1%E5%9E%8B%E9%83%A8%E7%BD%B2/">深度学习模型部署</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E7%BC%96%E7%A8%8B%E8%AF%AD%E8%A8%80/">编程语言</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tags</h3>
+    <div class="widget">
+      <ul class="tag-list" itemprop="keywords"><li class="tag-list-item"><a class="tag-list-link" href="/tags/Hexo/" rel="tag">Hexo</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/pyTorch/" rel="tag">pyTorch</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/python/" rel="tag">python</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/review/" rel="tag">review</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E6%95%B0%E6%8D%AE%E9%9B%86/" rel="tag">数据集</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/%E8%AE%BA%E6%96%87/" rel="tag">论文</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tag Cloud</h3>
+    <div class="widget tagcloud">
+      <a href="/tags/Hexo/" style="font-size: 10px;">Hexo</a> <a href="/tags/pyTorch/" style="font-size: 10px;">pyTorch</a> <a href="/tags/python/" style="font-size: 20px;">python</a> <a href="/tags/review/" style="font-size: 10px;">review</a> <a href="/tags/%E6%95%B0%E6%8D%AE%E9%9B%86/" style="font-size: 15px;">数据集</a> <a href="/tags/%E8%AE%BA%E6%96%87/" style="font-size: 10px;">论文</a>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Archives</h3>
+    <div class="widget">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2024/05/">May 2024</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2024/04/">April 2024</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2024/03/">March 2024</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/03/">March 2023</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/02/">February 2023</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/12/">December 2022</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/10/">October 2022</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/08/">August 2022</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/07/">July 2022</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Recent Posts</h3>
+    <div class="widget">
+      <ul>
+        
+          <li>
+            <a href="/posts/FastInst/">FastInst: A Simple Query-Based Model for Real-Time Instance Segmentation</a>
+          </li>
+        
+          <li>
+            <a href="/posts/240406-Summary/">关于深度学习的一些总结</a>
+          </li>
+        
+          <li>
+            <a href="/posts/Config-GitHub-Pages-with-Hexo">使用Hexo搭建GitHub博客</a>
+          </li>
+        
+          <li>
+            <a href="/posts/hello-world/">Hello World</a>
+          </li>
+        
+          <li>
+            <a href="/posts/pytorch-model-to-onnx/">pyTorch模型转onnx</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+
+  
+</aside>
+        
+      </div>
+      <footer id="footer">
+  
+  <div class="outer">
+    <div id="footer-info" class="inner">
+      
+      &copy; 2024 Venturi Li<br>
+      Powered by <a href="https://hexo.io/" target="_blank">Hexo</a>
+    </div>
+  </div>
+</footer>
+
+    </div>
+    <nav id="mobile-nav">
+  
+    <a href="/" class="mobile-nav-link">Home</a>
+  
+    <a href="/archives" class="mobile-nav-link">Archives</a>
+  
+</nav>
+    
+
+
+<script src="/js/jquery-3.6.4.min.js"></script>
+
+
+
+  
+<script src="/fancybox/jquery.fancybox.min.js"></script>
+
+
+
+
+<script src="/js/script.js"></script>
+
+
+
+
+
+  </div>
+</body>
+</html>

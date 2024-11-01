@@ -181,6 +181,95 @@ mjx-container[display="true"] + br {
       <div class="outer">
         <section id="main">
   
+    <article id="post-pytorch-upsample-convtranspose" class="h-entry article article-type-post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
+  <div class="article-meta">
+    <a href="/posts/pytorch-upsample-convtranspose/" class="article-date">
+  <time class="dt-published" datetime="2022-12-04T08:18:36.000Z" itemprop="datePublished">2022-12-04</time>
+</a>
+    
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/%E6%B7%B1%E5%BA%A6%E5%AD%A6%E4%B9%A0/">深度学习</a>
+  </div>
+
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="p-name article-title" href="/posts/pytorch-upsample-convtranspose/">pyTorch中Upsample和ConvTranspose区分</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="e-content article-entry" itemprop="articleBody">
+      
+        <p>在pytorch中，<code>nn.Upsample</code>和<code>ConvTranspose</code>（包含<code>nn.ConvTranspose1d</code>、<code>nn.ConvTranspose2d</code>和<code>nn.ConvTranspose3d</code>）均可以实现上采样。那么是模型设计上应该使用哪一种呢？</p>
+<p>实际上，在模型中应该使用哪一种并无严格的约束条件，习惯上可以视设计的网络层的作用而定。</p>
+<p><code>nn.Upsample</code>仅通过插值实现，没有参数也不需要模型训练学习。如果只是想单纯实现特征图上采样或者比较在意模型参数量，那么<code>nn.Upsample</code>必然是很好的选择。</p>
+<p><code>ConvTranspose</code>则是通过转置卷积实现，会引入一定的参数量，故需要进行训练，相对于<code>nn.Upsample</code>其能获得更加细粒度的高频信息。如果想让模型学会如何上采样那么就可以考虑<code>ConvTranspose</code>，如在GAN中生成图像。</p>
+<p>当然，两者的适用场景不是绝对的。以UNet为例，在原文中上采样用转置卷积完成，而后续很多实现则是用Upsample+<span
+class="math inline">\(1\times
+1\)</span>conv实现，这样的一个明显好处是相对于转置卷积来说参数量更少，而在性能上两者几乎是没有区别的。（参考Github作者@jvanvugt的<a
+target="_blank" rel="noopener" href="https://github.com/jvanvugt/pytorch-unet/blob/master/README.md#discussion-of-parametersarchitecture">讨论</a>）。</p>
+<p><strong>区别总结</strong>：</p>
+<table>
+<colgroup>
+<col style="width: 14%" />
+<col style="width: 23%" />
+<col style="width: 62%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th></th>
+<th>Upsample</th>
+<th>ConvTranspose</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>实现机制</td>
+<td>插值</td>
+<td>转置卷积，可训练学习</td>
+</tr>
+<tr class="even">
+<td>参数</td>
+<td>无</td>
+<td>有</td>
+</tr>
+<tr class="odd">
+<td>可处理数据维度</td>
+<td>1D、2D、3D</td>
+<td>ConvTranspose1d：1D ConvTranspose2d：2D ConvTranspose3d：3D</td>
+</tr>
+<tr class="even">
+<td>场景</td>
+<td>分割、检测等特征上采样</td>
+<td>GAN、高分辨率</td>
+</tr>
+</tbody>
+</table>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="https://venquieu.github.io/posts/pytorch-upsample-convtranspose/" data-id="clwnalu2q0018j815e0s81ztn" data-title="pyTorch中Upsample和ConvTranspose区分" class="article-share-link"><span class="fa fa-share">Share</span></a>
+      
+      
+      
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/pyTorch/" rel="tag">pyTorch</a></li></ul>
+
+    </footer>
+  </div>
+  
+</article>
+
+
+
+  
     <article id="post-norm-layers" class="h-entry article article-type-post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
   <div class="article-meta">
     <a href="/posts/norm-layers/" class="article-date">
@@ -1071,7 +1160,7 @@ target="_blank" rel="noopener" href="https://docs.python.org/3/library/sys.html"
   <div class="widget-wrap">
     <h3 class="widget-title">Archives</h3>
     <div class="widget">
-      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2024/06/">June 2024</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2024/05/">May 2024</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2024/04/">April 2024</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2024/03/">March 2024</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/03/">March 2023</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/02/">February 2023</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/12/">December 2022</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/10/">October 2022</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/08/">August 2022</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/07/">July 2022</a></li></ul>
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2024/11/">November 2024</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2024/06/">June 2024</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2024/05/">May 2024</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2024/04/">April 2024</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2024/03/">March 2024</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/03/">March 2023</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2023/02/">February 2023</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/12/">December 2022</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/10/">October 2022</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/08/">August 2022</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2022/07/">July 2022</a></li></ul>
     </div>
   </div>
 
@@ -1082,6 +1171,10 @@ target="_blank" rel="noopener" href="https://docs.python.org/3/library/sys.html"
     <h3 class="widget-title">Recent Posts</h3>
     <div class="widget">
       <ul>
+        
+          <li>
+            <a href="/posts/How-large-is-2x10-35/">How-large-is-2x10-35</a>
+          </li>
         
           <li>
             <a href="/posts/transformer">Attention-is-all-you-need</a>
@@ -1097,10 +1190,6 @@ target="_blank" rel="noopener" href="https://docs.python.org/3/library/sys.html"
         
           <li>
             <a href="/posts/Config-GitHub-Pages-with-Hexo">使用Hexo搭建GitHub博客</a>
-          </li>
-        
-          <li>
-            <a href="/posts/hello-world/">Hello World</a>
           </li>
         
       </ul>
